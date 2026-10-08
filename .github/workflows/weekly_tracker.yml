@@ -1,0 +1,64 @@
+name: Weekly Legal Intelligence Dispatch
+
+on:
+  schedule:
+    # 01:30 UTC = 07:00 AM IST every Monday
+    - cron: '30 1 * * 1'
+  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+
+permissions:
+  contents: write
+
+jobs:
+  run-tracker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Extraction & Site Generation
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          RECIPIENT_EMAILS: ${{ secrets.RECIPIENT_EMAILS }}
+        run: |
+          python -c "
+          import os
+          from datetime import datetime
+          from src.scraper import fetch_weekly_feed_entries
+          from src.analyzer import analyze_legal_data
+          from src.generator import build_html_dashboard
+          from src.mailer import send_executive_email
+
+          week_str = datetime.now().strftime('Week %U, %Y')
+          print('Ingesting legal feeds...')
+          raw = fetch_weekly_feed_entries()
+          
+          print('Synthesizing with Gemini...')
+          analyzed = analyze_legal_data(raw)
+          
+          os.makedirs('site', exist_ok=True)
+          html = build_html_dashboard(analyzed, week_str)
+          with open('site/index.html', 'w') as f:
+              f.write(html)
+          
+          portal_url = f'https://{os.environ.get(\"GITHUB_REPOSITORY_OWNER\", \"user\")}.github.io/{os.environ.get(\"GITHUB_REPOSITORY\", \"repo\").split(\"/\")[-1]}/'
+          print('Sending Executive Digest email...')
+          send_executive_email(analyzed, week_str, portal_url)
+          "
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
