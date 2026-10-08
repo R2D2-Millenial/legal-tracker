@@ -4,9 +4,10 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 def send_executive_email(updates, week_label, portal_url):
-    sender = os.environ["GMAIL_USER"]
+    sender = os.environ["GMAIL_USER"].strip()
+    # Strip spaces to prevent authentication formatting issues
+    app_password = os.environ["GMAIL_APP_PASSWORD"].replace(" ", "").strip()
     recipients = [e.strip() for e in os.environ["RECIPIENT_EMAILS"].split(",") if e.strip()]
-    app_password = os.environ["GMAIL_APP_PASSWORD"]
 
     # Filter High-Impact for the digest highlights
     high_impact = [u for u in updates if u.get("impact_level") == "High"]
@@ -17,11 +18,11 @@ def send_executive_email(updates, week_label, portal_url):
         items_summary += f"""
         <div style="border-left: 4px solid #b91c1c; padding-left: 12px; margin-bottom: 18px;">
             <p style="margin: 0; font-size: 11px; font-weight: bold; color: #b91c1c; text-transform: uppercase;">
-                [{item['authority']}] {item['law_domain']}
+                [{item.get('authority', 'General')}] {item.get('law_domain', 'Regulatory')}
             </p>
-            <h3 style="margin: 4px 0 6px 0; font-size: 15px; color: #111827;">{item['title']}</h3>
-            <p style="margin: 0 0 6px 0; font-size: 13px; color: #374151;"><strong>Shift:</strong> {item['what_changed']}</p>
-            <p style="margin: 0; font-size: 13px; color: #1e40af;"><strong>Action:</strong> {item['inhouse_action_items'][0] if item['inhouse_action_items'] else 'Monitor notifications'}</p>
+            <h3 style="margin: 4px 0 6px 0; font-size: 15px; color: #111827;">{item.get('title', '')}</h3>
+            <p style="margin: 0 0 6px 0; font-size: 13px; color: #374151;"><strong>Shift:</strong> {item.get('what_changed', '')}</p>
+            <p style="margin: 0; font-size: 13px; color: #1e40af;"><strong>Action:</strong> {item.get('inhouse_action_items', ['Monitor development'])[0] if item.get('inhouse_action_items') else 'Monitor development'}</p>
         </div>
         """
 
@@ -49,9 +50,16 @@ def send_executive_email(updates, week_label, portal_url):
     msg = MIMEMultipart()
     msg['From'] = f"Legal Intelligence <{sender}>"
     msg['To'] = ", ".join(recipients)
-    msg['Subject'] = f"Executive Legal Digest: {len(high_impact)} High-Impact Regulatory Updates ({week_label})"
+    msg['Subject'] = f"Executive Legal Digest: {len(high_impact)} High-Impact Updates ({week_label})"
     msg.attach(MIMEText(html_body, 'html'))
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+    # Connect using Port 587 + STARTTLS (standard for cloud environments)
+    server = smtplib.SMTP("smtp.gmail.com", 587, timeout=30)
+    try:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
         server.login(sender, app_password)
         server.sendmail(sender, recipients, msg.as_string())
+    finally:
+        server.quit()
