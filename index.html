@@ -1,62 +1,261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Juridigm Shift — Regulatory Intelligence Hub | Week 40, 2026</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juridigm Shift — Regulatory Intelligence | Week 40, 2026</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.55; padding: 36px 16px; }
-        .container { max-width: 880px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e2e8f0; padding-bottom: 22px; margin-bottom: 24px; gap: 16px; }
-        .brand-title { font-size: 28px; font-weight: 800; color: #0a192f; letter-spacing: -0.025em; }
-        .brand-title span { color: #c59b27; }
-        .subtitle { font-size: 13px; color: #475569; margin-top: 5px; font-weight: 500; }
-        .print-btn { background: #0a192f; color: #fef08a; border: 1px solid #c59b27; padding: 9px 18px; font-size: 12px; font-weight: 600; border-radius: 7px; cursor: pointer; white-space: nowrap; }
-        .print-btn:hover { background: #1e3a8a; color: #fff; }
-        .filter-panel { background: #fff; border: 1px solid #e2e8f0; border-top: 3px solid #0a192f; border-radius: 10px; padding: 16px 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(10,25,47,0.05); }
-        .filter-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 12px; letter-spacing: 0.06em; }
-        .filter-row { display: flex; flex-wrap: wrap; gap: 12px; }
-        select, .reset-btn { font-size: 13px; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0a192f; outline: none; }
-        select:focus { border-color: #c59b27; }
-        .reset-btn { background: #f8fafc; color: #475569; cursor: pointer; font-weight: 500; }
-        .reset-btn:hover { background: #e2e8f0; color: #0a192f; }
-        .update-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin-bottom: 22px; box-shadow: 0 2px 4px rgba(10,25,47,0.04); }
-        .card-meta { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-        .meta-tags { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .badge { font-size: 11px; font-weight: 700; padding: 2.5px 9px; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.03em; }
-        .badge-authority { background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; }
-        .badge-domain { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
-        .effective-date { font-size: 12px; color: #64748b; }
-        .card-title { font-size: 18px; font-weight: 700; color: #0a192f; margin-bottom: 14px; line-height: 1.35; }
-        .shift-box { background: #fdfcf7; border-left: 3.5px solid #c59b27; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px; }
-        .shift-box p { font-size: 13.5px; color: #334155; line-height: 1.5; }
-        .label-gold { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #b48316; margin-bottom: 4px; }
-        .label-navy { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; color: #0a192f; margin-bottom: 6px; }
-        .action-box { margin-bottom: 16px; }
-        .action-box ul { list-style-type: disc; padding-left: 20px; }
-        .action-box li { font-size: 13.5px; color: #1e293b; margin-bottom: 5px; }
-        .card-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 14px; font-size: 12px; color: #64748b; }
-        .card-footer strong { color: #0a192f; }
-        .card-footer a { color: #1d4ed8; text-decoration: none; font-weight: 600; }
-        .card-footer a:hover { color: #c59b27; text-decoration: underline; }
-        @media print { .no-print { display: none !important; } body { background: #fff; padding: 0; } .update-card { break-inside: avoid; border: 1px solid #94a3b8; box-shadow: none; margin-bottom: 20px; } .shift-box { border-left-color: #000; } }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f8fafc;
+            color: #0f172a;
+            line-height: 1.55;
+            padding: 40px 16px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid #0a192f;
+            padding-bottom: 20px;
+            margin-bottom: 28px;
+            gap: 16px;
+        }
+        .brand-eyebrow {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #c5a059;
+            margin-bottom: 4px;
+        }
+        .brand-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0a192f;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+        .brand-title span {
+            color: #c5a059;
+            font-weight: 700;
+            margin-left: 2px;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #475569;
+            margin-top: 6px;
+        }
+        .print-btn {
+            background: #0a192f;
+            color: #ffffff;
+            border: 1px solid #c5a059;
+            padding: 10px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .print-btn:hover {
+            background: #1e3a8a;
+            border-color: #e8c872;
+            box-shadow: 0 2px 8px rgba(10, 25, 47, 0.15);
+        }
+        .filter-panel {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-top: 3px solid #c5a059;
+            border-radius: 10px;
+            padding: 18px 22px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 6px rgba(10, 25, 47, 0.04);
+        }
+        .filter-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #0a192f;
+            margin-bottom: 12px;
+            letter-spacing: 0.08em;
+        }
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        select, .reset-btn {
+            font-size: 13px;
+            padding: 8px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #ffffff;
+            color: #0a192f;
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+        select:focus {
+            border-color: #c5a059;
+        }
+        .reset-btn {
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .reset-btn:hover {
+            background: #e2e8f0;
+            color: #0a192f;
+        }
+        .update-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 26px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 6px rgba(10, 25, 47, 0.03);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .update-card:hover {
+            border-color: #c5a059;
+            box-shadow: 0 4px 14px rgba(197, 160, 89, 0.12);
+        }
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        .meta-tags {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            letter-spacing: 0.03em;
+        }
+        .badge-navy {
+            background: #0a192f;
+            color: #f8fafc;
+            border: 1px solid #0a192f;
+        }
+        .badge-indigo {
+            background: #eff6ff;
+            color: #1e3a8a;
+            border: 1px solid #bfdbfe;
+        }
+        .effective-date {
+            font-size: 12px;
+            color: #64748b;
+        }
+        .card-title {
+            font-size: 18.5px;
+            font-weight: 700;
+            color: #0a192f;
+            margin-bottom: 16px;
+            line-height: 1.35;
+        }
+        .shift-box {
+            background: #fdfbf7;
+            border-left: 3.5px solid #c5a059;
+            padding: 14px 18px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 16px;
+        }
+        .shift-box p {
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.55;
+        }
+        .label-gold {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #926f27;
+            margin-bottom: 5px;
+        }
+        .label-navy {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+            color: #0a192f;
+            margin-bottom: 6px;
+        }
+        .action-box {
+            margin-bottom: 16px;
+        }
+        .action-box ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .action-box li {
+            font-size: 13.5px;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 14px;
+            font-size: 12.5px;
+            color: #64748b;
+        }
+        .card-footer strong {
+            color: #0a192f;
+        }
+        .card-footer a {
+            color: #1e3a8a;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.15s ease;
+        }
+        .card-footer a:hover {
+            color: #c5a059;
+            text-decoration: underline;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: #fff; padding: 0; }
+            .update-card { break-inside: avoid; border: 1px solid #94a3b8; box-shadow: none; margin-bottom: 20px; }
+            .shift-box { border-left-color: #0a192f; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <div>
-                <h1 class="brand-title">Juridigm <span>Shift</span></h1>
-                <p class="subtitle">In-House Regulatory, Privacy & AI Intelligence Briefing | Week 40, 2026</p>
+                <div class="brand-eyebrow">Juridigm Intelligence Network</div>
+                <h1 class="brand-title">JURIDIGM <span>SHIFT</span></h1>
+                <p class="subtitle">Weekly Regulatory, Privacy & AI Intelligence Briefing | Week 40, 2026</p>
             </div>
-            <button class="print-btn no-print" onclick="window.print()">Export / Print as PDF</button>
+            <button class="print-btn no-print" onclick="window.print()">Export Memo (PDF)</button>
         </header>
+
         <section class="filter-panel no-print">
-            <div class="filter-title">Filter Updates by Risk & Domain</div>
+            <div class="filter-title">Filter by Compliance Domain & Risk Level</div>
             <div class="filter-row">
                 <select id="impactFilter" onchange="applyFilters()">
                     <option value="ALL">All Impact Levels</option>
-                    <option value="High">High Impact</option>
+                    <option value="High">High Impact Only</option>
                     <option value="Medium">Medium Impact</option>
                     <option value="Low">Low Impact</option>
                 </select>
@@ -69,39 +268,48 @@
                     <option value="Employment & Labour">Labour & Employment</option>
                     <option value="Foreign Exchange">RBI / FEMA</option>
                 </select>
-                <button class="reset-btn" onclick="resetFilters()">Reset Filters</button>
+                <button class="reset-btn" onclick="resetFilters()">Reset</button>
             </div>
         </section>
+
         <main id="cardsContainer">
-        <article class="update-card" data-authority="Other" data-domain="Corporate" data-impact="Medium">
+            
+        <article class="update-card" data-authority="National Biodiversity Authority (NBA)" data-domain="Corporate" data-impact="Medium">
             <div class="card-meta">
                 <div class="meta-tags">
-                    <span class="badge" style="background:#fefce8;color:#854d0e;border:1px solid #fef08a;">Medium Impact</span>
-                    <span class="badge badge-authority">Other</span>
-                    <span class="badge badge-domain">Corporate</span>
+                    <span class="badge" style="background: #fdfbf7; color: #926f27; border: 1px solid #e8d7a7;">Medium Impact</span>
+                    <span class="badge badge-navy">National Biodiversity Authority (NBA)</span>
+                    <span class="badge badge-indigo">Corporate</span>
                 </div>
-                <div class="effective-date">Effective: <strong>Ongoing Compliance</strong></div>
+                <div class="effective-date">Effective: <strong>Active</strong></div>
             </div>
-            <h2 class="card-title">National Biodiversity Authority Reports Collection of ₹9.68 Crore Under ABS Framework</h2>
+
+            <h2 class="card-title">National Biodiversity Authority Collects ₹9.68 Crore Under Access and Benefit Sharing Framework</h2>
+
             <div class="shift-box">
-                <div class="label-gold">Shift in Legal Position</div>
-                <p>The National Biodiversity Authority (NBA) reported a collection of ₹9.68 crore under the Access and Benefit Sharing (ABS) framework, indicating sustained regulatory enforcement. Under the Biological Diversity Act, commercial entities utilizing Indian biological resources must share a percentage of their revenue or enter into ABS agreements, contrasting with previous lax compliance periods.</p>
+                <div class="label-gold">Regulatory Shift</div>
+                <p>The National Biodiversity Authority's collection of ₹9.68 crore highlights rigorous monitoring of Access and Benefit Sharing (ABS) compliance. Commercial entities utilizing Indian biological resources or associated traditional knowledge must strictly adhere to sharing benefits with local communities, contrasting with earlier periods of lax enforcement and pending amendments.</p>
             </div>
+
             <div class="action-box">
-                <div class="label-navy">In-House Counsel Action Items</div>
-                <ul><li>Audit the R&D and manufacturing supply chains to identify any Indian biological resources, raw materials, or traditional knowledge being utilized.</li><li>Ensure corresponding approvals are active and ABS agreements are duly executed with the NBA or respective State Biodiversity Boards (SBBs).</li><li>Reconcile calculated ABS dues against actual payments to prevent sudden enforcement actions, intellectual property registration blocks, or financial penalties.</li></ul>
+                <div class="label-navy">Counsel Action Items</div>
+                <ul><li>Identify and audit all raw materials and biological resources sourced within India for R&D or commercial production.</li><li>Ensure necessary approvals or intimations are filed with the State Biodiversity Boards (SBB) or the NBA.</li><li>Re-verify the computation of ABS liability (typically ranging from 0.1% to 0.5% of the annual ex-factory sales) to avoid retrospective penalties and litigation.</li></ul>
             </div>
+
             <div class="card-footer">
-                <span>Sector: <strong>Manufacturing</strong></span>
-                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109" target="_blank" rel="noopener noreferrer">Read Primary Gazette / Source &rarr;</a>
+                <span>Sector: <strong>Healthcare</strong></span>
+                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
             </div>
-        </article></main>
+        </article>
+        </main>
     </div>
+
     <script>
         function applyFilters() {
             const impact = document.getElementById('impactFilter').value;
             const domain = document.getElementById('domainFilter').value;
             const cards = document.querySelectorAll('.update-card');
+
             cards.forEach(card => {
                 const cardImpact = card.getAttribute('data-impact');
                 const cardDomain = card.getAttribute('data-domain');
@@ -110,6 +318,7 @@
                 card.style.display = (matchesImpact && matchesDomain) ? 'block' : 'none';
             });
         }
+
         function resetFilters() {
             document.getElementById('impactFilter').value = 'ALL';
             document.getElementById('domainFilter').value = 'ALL';
