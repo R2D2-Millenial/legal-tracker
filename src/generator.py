@@ -5,39 +5,39 @@ def build_html_dashboard(updates, week_label):
             "High": "bg-red-100 text-red-800 border-red-300",
             "Medium": "bg-amber-100 text-amber-800 border-amber-300",
             "Low": "bg-blue-100 text-blue-800 border-blue-300"
-        }.get(item["impact_level"], "bg-slate-100 text-slate-800")
+        }.get(item.get("impact_level", "Medium"), "bg-slate-100 text-slate-800")
 
-        actions = "".join([f"<li class='text-slate-700 text-sm'>• {act}</li>" for act in item["inhouse_action_items"]])
+        actions = "".join([f"<li class='text-slate-700 text-sm'>• {act}</li>" for act in item.get("inhouse_action_items", [])])
 
         cards_html += f"""
         <article class="update-card border border-slate-200 rounded-xl p-6 bg-white shadow-sm mb-6"
-                 data-authority="{item['authority']}"
-                 data-domain="{item['law_domain']}"
-                 data-impact="{item['impact_level']}">
+                 data-authority="{item.get('authority', '')}"
+                 data-domain="{item.get('law_domain', '')}"
+                 data-impact="{item.get('impact_level', '')}">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge_color}">{item['impact_level']} Impact</span>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{item['authority']}</span>
-                    <span class="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{item['law_domain']}</span>
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge_color}">{item.get('impact_level', 'Routine')} Impact</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{item.get('authority', 'General')}</span>
+                    <span class="text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 font-medium">{item.get('law_domain', 'General')}</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">Effective: {item['effective_date']}</span>
+                <span class="text-xs text-slate-500 font-medium">Effective: {item.get('effective_date', 'N/A')}</span>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-900 mb-2">{item['title']}</h3>
+            <h3 class="text-lg font-bold text-slate-900 mb-2">{item.get('title', '')}</h3>
             
             <div class="mb-4 bg-slate-50 p-3.5 rounded-lg border border-slate-100 text-sm">
                 <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Shift in Legal Position:</p>
-                <p class="text-slate-700 leading-relaxed">{item['what_changed']}</p>
+                <p class="text-slate-700 leading-relaxed">{item.get('what_changed', '')}</p>
             </div>
 
             <div class="mb-4">
-                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Legal & Compliance Action Items:</p>
+                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Legal & In-House Action Items:</p>
                 <ul class="space-y-1">{actions}</ul>
             </div>
 
             <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-                <span class="text-slate-500">Sector: <strong>{item['sector']}</strong></span>
-                <a href="{item['source_url']}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1">Read Official Source &rarr;</a>
+                <span class="text-slate-500">Sector: <strong>{item.get('sector', 'General')}</strong></span>
+                <a href="{item.get('source_url', '#')}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1">Read Official Source &rarr;</a>
             </div>
         </article>
         """
@@ -48,7 +48,7 @@ def build_html_dashboard(updates, week_label):
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Indian Corporate Legal Intelligence — {week_label}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
     <style>
         @media print {{
             .no-print {{ display: none !important; }}
@@ -62,7 +62,7 @@ def build_html_dashboard(updates, week_label):
         <header class="mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
                 <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">In-House Regulatory Intelligence Hub</h1>
-                <p class="text-slate-600 text-sm mt-1">Weekly Regulatory & Judicial Briefing for Counsel | {week_label}</p>
+                <p class="text-slate-600 text-sm mt-1">Weekly Regulatory & Compliance Briefing for Legal Counsel | {week_label}</p>
             </div>
             <div class="no-print flex items-center gap-3">
                 <button onclick="window.print()" class="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">
@@ -83,10 +83,11 @@ def build_html_dashboard(updates, week_label):
                 </select>
                 <select id="domainFilter" onchange="applyFilters()" class="text-xs border rounded-lg p-2 bg-white text-slate-800 border-slate-300">
                     <option value="ALL">All Legal Domains</option>
+                    <option value="Data Privacy & DPDP">Data Privacy & DPDP</option>
+                    <option value="AI & Emerging Tech">AI & Emerging Tech</option>
                     <option value="Corporate">Corporate / MCA</option>
                     <option value="Securities">Securities / SEBI</option>
                     <option value="Employment & Labour">Labour & Employment</option>
-                    <option value="Privacy & Tech">Privacy & MeitY</option>
                     <option value="Foreign Exchange">RBI / FEMA</option>
                 </select>
                 <button onclick="resetFilters()" class="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg p-2">
