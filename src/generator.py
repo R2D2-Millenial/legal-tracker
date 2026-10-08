@@ -1,43 +1,51 @@
 def build_html_dashboard(updates, week_label):
     cards_html = ""
     for item in updates:
-        badge_color = {
-            "High": "bg-red-100 text-red-800 border-red-300",
-            "Medium": "bg-amber-100 text-amber-800 border-amber-300",
-            "Low": "bg-blue-100 text-blue-800 border-blue-300"
-        }.get(item.get("impact_level", "Medium"), "bg-slate-100 text-slate-800")
+        impact = item.get("impact_level", "Medium")
+        
+        # Color badges based on impact
+        if impact == "High":
+            badge_style = "background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca;"
+        elif impact == "Low":
+            badge_style = "background-color: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe;"
+        else:
+            badge_style = "background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a;"
 
-        actions = "".join([f"<li class='text-slate-700 text-sm'>• {act}</li>" for act in item.get("inhouse_action_items", [])])
+        # Clean up double bullets from AI output
+        action_lis = ""
+        for act in item.get("inhouse_action_items", []):
+            clean_act = act.lstrip("•-* ").strip()
+            action_lis += f"<li>{clean_act}</li>"
 
         cards_html += f"""
-        <article class="update-card border border-slate-200 rounded-xl p-6 bg-white shadow-sm mb-6"
+        <article class="update-card"
                  data-authority="{item.get('authority', '')}"
                  data-domain="{item.get('law_domain', '')}"
-                 data-impact="{item.get('impact_level', '')}">
-            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full border {badge_color}">{item.get('impact_level', 'Routine')} Impact</span>
-                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded">{item.get('authority', 'General')}</span>
-                    <span class="text-xs text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 font-medium">{item.get('law_domain', 'General')}</span>
+                 data-impact="{impact}">
+            <div class="card-meta">
+                <div class="meta-tags">
+                    <span class="badge" style="{badge_style}">{impact} Impact</span>
+                    <span class="badge badge-gray">{item.get('authority', 'General')}</span>
+                    <span class="badge badge-indigo">{item.get('law_domain', 'General')}</span>
                 </div>
-                <span class="text-xs text-slate-500 font-medium">Effective: {item.get('effective_date', 'N/A')}</span>
+                <div class="effective-date">Effective: <strong>{item.get('effective_date', 'Immediate')}</strong></div>
             </div>
 
-            <h3 class="text-lg font-bold text-slate-900 mb-2">{item.get('title', '')}</h3>
-            
-            <div class="mb-4 bg-slate-50 p-3.5 rounded-lg border border-slate-100 text-sm">
-                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Shift in Legal Position:</p>
-                <p class="text-slate-700 leading-relaxed">{item.get('what_changed', '')}</p>
+            <h2 class="card-title">{item.get('title', '')}</h2>
+
+            <div class="shift-box">
+                <div class="section-label">Shift in Legal Position</div>
+                <p>{item.get('what_changed', '')}</p>
             </div>
 
-            <div class="mb-4">
-                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Legal & In-House Action Items:</p>
-                <ul class="space-y-1">{actions}</ul>
+            <div class="action-box">
+                <div class="section-label">Legal & In-House Action Items</div>
+                <ul>{action_lis}</ul>
             </div>
 
-            <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
-                <span class="text-slate-500">Sector: <strong>{item.get('sector', 'General')}</strong></span>
-                <a href="{item.get('source_url', '#')}" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1">Read Official Source &rarr;</a>
+            <div class="card-footer">
+                <span>Sector: <strong>{item.get('sector', 'General')}</strong></span>
+                <a href="{item.get('source_url', '#')}" target="_blank" rel="noopener noreferrer">Read Official Source &rarr;</a>
             </div>
         </article>
         """
@@ -47,41 +55,203 @@ def build_html_dashboard(updates, week_label):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indian Corporate Legal Intelligence — {week_label}</title>
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <title>In-House Regulatory Intelligence Hub — {week_label}</title>
     <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.5;
+            padding: 32px 16px;
+        }}
+        .container {{
+            max-width: 860px;
+            margin: 0 auto;
+        }}
+        header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+            gap: 16px;
+        }}
+        h1 {{
+            font-size: 24px;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }}
+        .subtitle {{
+            font-size: 13px;
+            color: #64748b;
+            margin-top: 4px;
+        }}
+        .print-btn {{
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            white-space: nowrap;
+        }}
+        .print-btn:hover {{ background-color: #334155; }}
+        .filter-panel {{
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }}
+        .filter-title {{
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }}
+        .filter-row {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }}
+        select, .reset-btn {{
+            font-size: 13px;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #1e293b;
+            outline: none;
+        }}
+        .reset-btn {{
+            background-color: #f1f5f9;
+            cursor: pointer;
+            font-weight: 500;
+        }}
+        .reset-btn:hover {{ background-color: #e2e8f0; }}
+        .update-card {{
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }}
+        .card-meta {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
+        }}
+        .meta-tags {{
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }}
+        .badge {{
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }}
+        .badge-gray {{ background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }}
+        .badge-indigo {{ background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }}
+        .effective-date {{
+            font-size: 12px;
+            color: #64748b;
+        }}
+        .card-title {{
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 14px;
+            line-height: 1.35;
+        }}
+        .shift-box {{
+            background: #f8fafc;
+            border-left: 3px solid #cbd5e1;
+            padding: 12px 14px;
+            border-radius: 0 6px 6px 0;
+            margin-bottom: 16px;
+        }}
+        .shift-box p {{
+            font-size: 13.5px;
+            color: #334155;
+        }}
+        .section-label {{
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #475569;
+            margin-bottom: 4px;
+        }}
+        .action-box {{ margin-bottom: 16px; }}
+        .action-box ul {{
+            list-style-type: disc;
+            padding-left: 20px;
+            margin-top: 6px;
+        }}
+        .action-box li {{
+            font-size: 13.5px;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }}
+        .card-footer {{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+            font-size: 12px;
+            color: #64748b;
+        }}
+        .card-footer a {{
+            color: #2563eb;
+            text-decoration: none;
+            font-weight: 600;
+        }}
+        .card-footer a:hover {{ text-decoration: underline; }}
         @media print {{
             .no-print {{ display: none !important; }}
-            body {{ background: white; }}
-            .update-card {{ break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 1.5rem; }}
+            body {{ background: #fff; padding: 0; }}
+            .update-card {{ break-inside: avoid; border: 1px solid #94a3b8; box-shadow: none; }}
         }}
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen py-10 px-4 sm:px-8">
-    <div class="max-w-5xl mx-auto">
-        <header class="mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+<body>
+    <div class="container">
+        <header>
             <div>
-                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">In-House Regulatory Intelligence Hub</h1>
-                <p class="text-slate-600 text-sm mt-1">Weekly Regulatory & Compliance Briefing for Legal Counsel | {week_label}</p>
+                <h1>In-House Regulatory Intelligence Hub</h1>
+                <p class="subtitle">Weekly Regulatory & Compliance Briefing for Legal Counsel | {week_label}</p>
             </div>
-            <div class="no-print flex items-center gap-3">
-                <button onclick="window.print()" class="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">
-                    Export / Print as PDF
-                </button>
-            </div>
+            <button class="print-btn no-print" onclick="window.print()">Export / Print as PDF</button>
         </header>
 
-        <!-- Dynamic Filter Controls -->
-        <section class="no-print bg-white border border-slate-200 rounded-xl p-4 mb-8 shadow-sm">
-            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Filter Intelligence Feed</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <select id="impactFilter" onchange="applyFilters()" class="text-xs border rounded-lg p-2 bg-white text-slate-800 border-slate-300">
+        <section class="filter-panel no-print">
+            <div class="filter-title">Filter Updates</div>
+            <div class="filter-row">
+                <select id="impactFilter" onchange="applyFilters()">
                     <option value="ALL">All Impact Levels</option>
-                    <option value="High">High Impact Only</option>
+                    <option value="High">High Impact</option>
                     <option value="Medium">Medium Impact</option>
                     <option value="Low">Low Impact</option>
                 </select>
-                <select id="domainFilter" onchange="applyFilters()" class="text-xs border rounded-lg p-2 bg-white text-slate-800 border-slate-300">
+                <select id="domainFilter" onchange="applyFilters()">
                     <option value="ALL">All Legal Domains</option>
                     <option value="Data Privacy & DPDP">Data Privacy & DPDP</option>
                     <option value="AI & Emerging Tech">AI & Emerging Tech</option>
@@ -90,13 +260,10 @@ def build_html_dashboard(updates, week_label):
                     <option value="Employment & Labour">Labour & Employment</option>
                     <option value="Foreign Exchange">RBI / FEMA</option>
                 </select>
-                <button onclick="resetFilters()" class="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg p-2">
-                    Reset Filters
-                </button>
+                <button class="reset-btn" onclick="resetFilters()">Reset</button>
             </div>
         </section>
 
-        <!-- Digest Cards Container -->
         <main id="cardsContainer">
             {cards_html}
         </main>
@@ -112,7 +279,7 @@ def build_html_dashboard(updates, week_label):
                 const cardImpact = card.getAttribute('data-impact');
                 const cardDomain = card.getAttribute('data-domain');
                 const matchesImpact = impact === 'ALL' || cardImpact === impact;
-                const matchesDomain = domain === 'ALL' || cardDomain === domain;
+                const matchesDomain = domain === 'ALL' || cardDomain.includes(domain);
                 card.style.display = (matchesImpact && matchesDomain) ? 'block' : 'none';
             }});
         }}
