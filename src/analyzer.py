@@ -1,6 +1,8 @@
 import json
 import os
+import time
 from google import genai
+from google.genai.errors import ServerError
 
 client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
@@ -38,9 +40,19 @@ def analyze_legal_data(raw_entries):
     {ANALYSIS_SCHEMA}
     """
 
-    response = client.models.generate_content(
-        model='gemini-3.8-flash',
-        contents=prompt,
-        config={'response_mime_type': 'application/json'}
-    )
-    return json.loads(response.text)
+    # Retry up to 3 times if Google's servers report high demand
+    for attempt in range(1, 4):
+        try:
+            print(f"Calling Gemini API (Attempt {attempt}/3)...")
+            response = client.models.generate_content(
+                model='gemini-3.8-flash',
+                contents=prompt,
+                config={'response_mime_type': 'application/json'}
+            )
+            return json.loads(response.text)
+        except ServerError as e:
+            if attempt < 3:
+                print("Server busy (503). Waiting 15 seconds before retrying...")
+                time.sleep(15)
+            else:
+                raise e
