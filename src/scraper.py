@@ -7,9 +7,10 @@ FEEDS = {
     "Judicial Precedents": "https://www.barandbench.com/feed",
     "PIB Corporate Affairs": "https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1",
     "PIB Finance": "https://pib.gov.in/RssMain.aspx?ModId=2&Lang=1",
+    "MeitY & Electronics (IT/AI)": "https://pib.gov.in/RssMain.aspx?ModId=3&Lang=1",
+    "Cyber & Privacy Law": "https://www.livelaw.in/rss/cyber-laws"
 }
 
-# Browser header so legal sites do not flag the script as a bot
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 }
@@ -34,14 +35,13 @@ def fetch_weekly_feed_entries():
             print(f"Warning: Could not fetch feed {category}: {e}")
             continue
 
-    # Safeguard: Never pass an empty list to the AI
     if not collected:
         collected.append({
             "source_category": "General",
             "title": "No major statutory notifications published this week",
-            "summary": "Regular monitoring completed. No significant gazette circulars published in this window.",
+            "summary": "Regular monitoring completed. No material gazette circulars published in this window.",
             "link": "https://egazette.gov.in",
             "published": datetime.now().strftime("%Y-%m-%d")
         })
 
-    return collected[:30]
+    return collected[:35]
