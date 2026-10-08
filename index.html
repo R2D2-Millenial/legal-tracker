@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Corporate Legal Intelligence — Week 40, 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .update-card { break-inside: avoid; border: 1px solid #ccc; box-shadow: none; margin-bottom: 1.5rem; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen py-10 px-4 sm:px-8">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">In-House Regulatory Intelligence Hub</h1>
+                <p class="text-slate-600 text-sm mt-1">Weekly Regulatory & Judicial Briefing for Counsel | Week 40, 2026</p>
+            </div>
+            <div class="no-print flex items-center gap-3">
+                <button onclick="window.print()" class="px-4 py-2 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition">
+                    Export / Print as PDF
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Filter Controls -->
+        <section class="no-print bg-white border border-slate-200 rounded-xl p-4 mb-8 shadow-sm">
+            <h2 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Filter Intelligence Feed</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <select id="impactFilter" onchange="applyFilters()" class="text-xs border rounded-lg p-2 bg-white text-slate-800 border-slate-300">
+                    <option value="ALL">All Impact Levels</option>
+                    <option value="High">High Impact Only</option>
+                    <option value="Medium">Medium Impact</option>
+                    <option value="Low">Low Impact</option>
+                </select>
+                <select id="domainFilter" onchange="applyFilters()" class="text-xs border rounded-lg p-2 bg-white text-slate-800 border-slate-300">
+                    <option value="ALL">All Legal Domains</option>
+                    <option value="Corporate">Corporate / MCA</option>
+                    <option value="Securities">Securities / SEBI</option>
+                    <option value="Employment & Labour">Labour & Employment</option>
+                    <option value="Privacy & Tech">Privacy & MeitY</option>
+                    <option value="Foreign Exchange">RBI / FEMA</option>
+                </select>
+                <button onclick="resetFilters()" class="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg p-2">
+                    Reset Filters
+                </button>
+            </div>
+        </section>
+
+        <!-- Digest Cards Container -->
+        <main id="cardsContainer">
+            
+        <article class="update-card border border-slate-200 rounded-xl p-6 bg-white shadow-sm mb-6"
+                 data-authority="Other"
+                 data-domain="Sectoral"
+                 data-impact="Medium">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 text-xs font-semibold rounded-full border bg-amber-100 text-amber-800 border-amber-300">Medium Impact</span>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-slate-600 bg-slate-100 px-2 py-0.5 rounded">Other</span>
+                    <span class="text-xs text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">Sectoral</span>
+                </div>
+                <span class="text-xs text-slate-500 font-medium">Effective: Ongoing Compliance</span>
+            </div>
+
+            <h3 class="text-lg font-bold text-slate-900 mb-2">National Biodiversity Authority steps up enforcement of Access and Benefit Sharing (ABS) compliance</h3>
+            
+            <div class="mb-4 bg-slate-50 p-3.5 rounded-lg border border-slate-100 text-sm">
+                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Shift in Legal Position:</p>
+                <p class="text-slate-700 leading-relaxed">The National Biodiversity Authority (NBA) has collected INR 9.68 crore under the Access and Benefit Sharing (ABS) framework during April-September. This underscores intensified regulatory scrutiny and compliance enforcement on businesses utilizing Indian biological resources. Previously, enforcement of ABS compliance was relatively passive, but active collection trends signify strict audit protocols on commercial utilization and patent filings.</p>
+            </div>
+
+            <div class="mb-4">
+                <p class="font-semibold text-slate-900 text-xs mb-1 uppercase tracking-wide">Legal & Compliance Action Items:</p>
+                <ul class="space-y-1"><li class='text-slate-700 text-sm'>• Conduct an internal compliance audit of all bio-resources, active pharmaceutical ingredients (APIs), and natural raw materials sourced within India to ensure proper NBA or State Biodiversity Board (SBB) approvals are in place.</li><li class='text-slate-700 text-sm'>• Verify that all patent applications utilizing Indian biological resources have obtained the mandatory prior clearance from the NBA under Section 6 of the Biological Diversity Act, 2002.</li><li class='text-slate-700 text-sm'>• Review and align commercial agreements with local suppliers to clearly demarcate ABS payment liabilities and ensure indemnity against non-compliance by intermediaries.</li></ul>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
+                <span class="text-slate-500">Sector: <strong>Pharma</strong></span>
+                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109" target="_blank" class="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1">Read Official Source &rarr;</a>
+            </div>
+        </article>
+        
+        </main>
+    </div>
+
+    <script>
+        function applyFilters() {
+            const impact = document.getElementById('impactFilter').value;
+            const domain = document.getElementById('domainFilter').value;
+            const cards = document.querySelectorAll('.update-card');
+
+            cards.forEach(card => {
+                const cardImpact = card.getAttribute('data-impact');
+                const cardDomain = card.getAttribute('data-domain');
+                const matchesImpact = impact === 'ALL' || cardImpact === impact;
+                const matchesDomain = domain === 'ALL' || cardDomain === domain;
+                card.style.display = (matchesImpact && matchesDomain) ? 'block' : 'none';
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('impactFilter').value = 'ALL';
+            document.getElementById('domainFilter').value = 'ALL';
+            applyFilters();
+        }
+    </script>
+</body>
+</html>
