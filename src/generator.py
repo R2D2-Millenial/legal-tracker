@@ -55,7 +55,7 @@ def build_html_dashboard(updates, week_label):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>In-House Regulatory Intelligence Hub — {week_label}</title>
+    <title>Juridigm Shift — Regulatory Intelligence | {week_label}</title>
     <style>
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{
@@ -78,11 +78,14 @@ def build_html_dashboard(updates, week_label):
             margin-bottom: 24px;
             gap: 16px;
         }}
-        h1 {{
-            font-size: 24px;
+        .brand-title {{
+            font-size: 26px;
             font-weight: 800;
             color: #0f172a;
             letter-spacing: -0.02em;
+        }}
+        .brand-title span {{
+            color: #3b82f6;
         }}
         .subtitle {{
             font-size: 13px;
@@ -236,14 +239,14 @@ def build_html_dashboard(updates, week_label):
     <div class="container">
         <header>
             <div>
-                <h1>In-House Regulatory Intelligence Hub</h1>
-                <p class="subtitle">Weekly Regulatory & Compliance Briefing for Legal Counsel | {week_label}</p>
+                <h1 class="brand-title">Juridigm <span>Shift</span></h1>
+                <p class="subtitle">Weekly In-House Regulatory & Tech Intelligence | {week_label}</p>
             </div>
             <button class="print-btn no-print" onclick="window.print()">Export / Print as PDF</button>
         </header>
 
         <section class="filter-panel no-print">
-            <div class="filter-title">Filter Updates</div>
+            <div class="filter-title">Filter Intelligence Feed</div>
             <div class="filter-row">
                 <select id="impactFilter" onchange="applyFilters()">
                     <option value="ALL">All Impact Levels</option>
