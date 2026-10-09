@@ -56,10 +56,20 @@ def build_html_dashboard(updates, week_label):
         if w != week_label:
             week_options += f'<option value="{w}">{w}</option>'
 
+    # Active practice domains for Juridigm's advisory:
+    TECH_PRACTICE_KEYWORDS = [
+        "data privacy", "dpdp", "ai", "artificial intelligence", 
+        "technology", "tech", "cybersecurity", "employment", 
+        "labour", "contract", "software", "intellectual property"
+    ]
+
     cards_html = ""
     for item in all_items:
         impact = item.get("impact_level", "Medium")
         item_week = item.get("week_label", week_label)
+        domain = item.get("law_domain", "General")
+        sector = item.get("sector", "General")
+
         badge_style = {
             "High": "background:#fef2f2;color:#991b1b;border:1px solid #fecaca;",
             "Low": "background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;",
@@ -67,14 +77,27 @@ def build_html_dashboard(updates, week_label):
 
         action_lis = "".join(f"<li>{act.lstrip('•-* ').strip()}</li>" for act in item.get("inhouse_action_items", []))
 
+        # Check if card touches Tech, AI, DPDP, Employment, or Contracts
+        combined_text = f"{domain} {sector} {item.get('title', '')}".lower()
+        is_relevant_tech_matter = any(kw in combined_text for kw in TECH_PRACTICE_KEYWORDS)
+        is_excluded_industry = any(ex in combined_text for ex in ["biodiversity", "pharmaceutical", "heavy industry", "factory inspection"])
+        
+        cta_bar_html = ""
+        if is_relevant_tech_matter and not is_excluded_industry:
+            cta_bar_html = """
+            <div class="card-cta-bar no-print">
+                <span>Reviewing contracts, employee IP, or compliance in this area?</span>
+                <a href="https://juridigm.in/contact" target="_blank" rel="noopener noreferrer">Request Legal Review &rarr;</a>
+            </div>"""
+
         cards_html += f"""
-        <article class="update-card" data-week="{item_week}" data-authority="{item.get('authority', '')}" data-domain="{item.get('law_domain', '')}" data-impact="{impact}">
+        <article class="update-card" data-week="{item_week}" data-authority="{item.get('authority', '')}" data-domain="{domain}" data-impact="{impact}">
             <div class="card-meta">
                 <div class="meta-tags">
                     <span class="badge badge-week">{item_week}</span>
                     <span class="badge" style="{badge_style}">{impact} Impact</span>
                     <span class="badge badge-navy">{item.get('authority', 'General')}</span>
-                    <span class="badge badge-indigo">{item.get('law_domain', 'General')}</span>
+                    <span class="badge badge-indigo">{domain}</span>
                 </div>
                 <div class="effective-date">Effective: <strong>{item.get('effective_date', 'Immediate')}</strong></div>
             </div>
@@ -88,9 +111,10 @@ def build_html_dashboard(updates, week_label):
                 <ul>{action_lis}</ul>
             </div>
             <div class="card-footer">
-                <span>Sector: <strong>{item.get('sector', 'General')}</strong></span>
+                <span>Sector: <strong>{sector}</strong></span>
                 <a href="{item.get('source_url', '#')}" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
             </div>
+            {cta_bar_html}
         </article>"""
 
     archive_json_str = json.dumps(all_items).replace("</script>", "<\\/script>")
@@ -104,12 +128,15 @@ def build_html_dashboard(updates, week_label):
         * {{ box-sizing: border-box; margin: 0; padding: 0; }}
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.55; padding: 40px 16px; }}
         .container {{ max-width: 900px; margin: 0 auto; }}
-        header {{ display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0a192f; padding-bottom: 20px; margin-bottom: 28px; gap: 16px; }}
+        header {{ display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0a192f; padding-bottom: 20px; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }}
         .brand-eyebrow {{ font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #c5a059; margin-bottom: 4px; }}
         .brand-title {{ font-size: 30px; font-weight: 800; color: #0a192f; letter-spacing: -0.02em; line-height: 1.1; }}
         .brand-title span {{ color: #c5a059; font-weight: 700; }}
         .subtitle {{ font-size: 13px; color: #475569; margin-top: 6px; }}
-        .print-btn {{ background: #0a192f; color: #fff; border: 1px solid #c5a059; padding: 10px 18px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; white-space: nowrap; }}
+        .header-actions {{ display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }}
+        .cta-btn {{ background: #c5a059; color: #0a192f; border: 1px solid #c5a059; padding: 9px 15px; font-size: 12px; font-weight: 700; border-radius: 6px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }}
+        .cta-btn:hover {{ background: #d4b26f; color: #0a192f; }}
+        .print-btn {{ background: #0a192f; color: #fff; border: 1px solid #c5a059; padding: 9px 16px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; white-space: nowrap; }}
         .print-btn:hover {{ background: #1e3a8a; border-color: #e8c872; }}
         .filter-panel {{ background: #fff; border: 1px solid #e2e8f0; border-top: 3px solid #c5a059; border-radius: 10px; padding: 18px 22px; margin-bottom: 28px; box-shadow: 0 2px 6px rgba(10,25,47,0.04); }}
         .filter-title {{ font-size: 11px; font-weight: 700; text-transform: uppercase; color: #0a192f; margin-bottom: 12px; letter-spacing: 0.08em; }}
@@ -140,6 +167,9 @@ def build_html_dashboard(updates, week_label):
         .card-footer strong {{ color: #0a192f; }}
         .card-footer a {{ color: #1e3a8a; text-decoration: none; font-weight: 600; }}
         .card-footer a:hover {{ color: #c5a059; text-decoration: underline; }}
+        .card-cta-bar {{ background: #fdfbf7; border: 1px dashed #e8d7a7; border-radius: 6px; padding: 10px 14px; margin-top: 14px; font-size: 12.5px; color: #64748b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }}
+        .card-cta-bar a {{ color: #926f27; font-weight: 700; text-decoration: none; }}
+        .card-cta-bar a:hover {{ color: #0a192f; text-decoration: underline; }}
         @media print {{ .no-print {{ display: none !important; }} body {{ background: #fff; padding: 0; }} }}
     </style>
 </head>
@@ -151,7 +181,10 @@ def build_html_dashboard(updates, week_label):
                 <h1 class="brand-title">JURIDIGM <span>SHIFT</span></h1>
                 <p class="subtitle">Weekly Regulatory, Privacy & AI Intelligence Briefing</p>
             </div>
-            <button class="print-btn no-print" onclick="window.print()">Export Memo (PDF)</button>
+            <div class="header-actions no-print">
+                <a href="https://juridigm.in/contact" target="_blank" rel="noopener noreferrer" class="cta-btn">Consult Juridigm &rarr;</a>
+                <button class="print-btn" onclick="window.print()">Export Memo (PDF)</button>
+            </div>
         </header>
 
         <section class="filter-panel no-print">
@@ -213,7 +246,6 @@ def build_html_dashboard(updates, week_label):
             applyFilters();
         }}
 
-        // Show the current week by default on page load
         applyFilters();
     </script>
 </body>
