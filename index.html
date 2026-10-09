@@ -7,12 +7,15 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; background: #f8fafc; color: #0f172a; line-height: 1.55; padding: 40px 16px; }
         .container { max-width: 900px; margin: 0 auto; }
-        header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0a192f; padding-bottom: 20px; margin-bottom: 28px; gap: 16px; }
+        header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0a192f; padding-bottom: 20px; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
         .brand-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: #c5a059; margin-bottom: 4px; }
         .brand-title { font-size: 30px; font-weight: 800; color: #0a192f; letter-spacing: -0.02em; line-height: 1.1; }
         .brand-title span { color: #c5a059; font-weight: 700; }
         .subtitle { font-size: 13px; color: #475569; margin-top: 6px; }
-        .print-btn { background: #0a192f; color: #fff; border: 1px solid #c5a059; padding: 10px 18px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .cta-btn { background: #c5a059; color: #0a192f; border: 1px solid #c5a059; padding: 9px 15px; font-size: 12px; font-weight: 700; border-radius: 6px; text-decoration: none; cursor: pointer; transition: all 0.2s ease; }
+        .cta-btn:hover { background: #d4b26f; color: #0a192f; }
+        .print-btn { background: #0a192f; color: #fff; border: 1px solid #c5a059; padding: 9px 16px; font-size: 12px; font-weight: 600; border-radius: 6px; cursor: pointer; white-space: nowrap; }
         .print-btn:hover { background: #1e3a8a; border-color: #e8c872; }
         .filter-panel { background: #fff; border: 1px solid #e2e8f0; border-top: 3px solid #c5a059; border-radius: 10px; padding: 18px 22px; margin-bottom: 28px; box-shadow: 0 2px 6px rgba(10,25,47,0.04); }
         .filter-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #0a192f; margin-bottom: 12px; letter-spacing: 0.08em; }
@@ -43,6 +46,9 @@
         .card-footer strong { color: #0a192f; }
         .card-footer a { color: #1e3a8a; text-decoration: none; font-weight: 600; }
         .card-footer a:hover { color: #c5a059; text-decoration: underline; }
+        .card-cta-bar { background: #fdfbf7; border: 1px dashed #e8d7a7; border-radius: 6px; padding: 10px 14px; margin-top: 14px; font-size: 12.5px; color: #64748b; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; }
+        .card-cta-bar a { color: #926f27; font-weight: 700; text-decoration: none; }
+        .card-cta-bar a:hover { color: #0a192f; text-decoration: underline; }
         @media print { .no-print { display: none !important; } body { background: #fff; padding: 0; } }
     </style>
 </head>
@@ -54,7 +60,10 @@
                 <h1 class="brand-title">JURIDIGM <span>SHIFT</span></h1>
                 <p class="subtitle">Weekly Regulatory, Privacy & AI Intelligence Briefing</p>
             </div>
-            <button class="print-btn no-print" onclick="window.print()">Export Memo (PDF)</button>
+            <div class="header-actions no-print">
+                <a href="https://juridigm.in/contact" target="_blank" rel="noopener noreferrer" class="cta-btn">Consult Juridigm &rarr;</a>
+                <button class="print-btn" onclick="window.print()">Export Memo (PDF)</button>
+            </div>
         </header>
 
         <section class="filter-panel no-print">
@@ -82,6 +91,89 @@
         </section>
 
         <main id="cardsContainer">
+        <article class="update-card" data-week="Week 40, 2026" data-authority="Other" data-domain="AI & Emerging Tech" data-impact="Medium">
+            <div class="card-meta">
+                <div class="meta-tags">
+                    <span class="badge badge-week">Week 40, 2026</span>
+                    <span class="badge" style="background:#fdfbf7;color:#926f27;border:1px solid #e8d7a7;">Medium Impact</span>
+                    <span class="badge badge-navy">Other</span>
+                    <span class="badge badge-indigo">AI & Emerging Tech</span>
+                </div>
+                <div class="effective-date">Effective: <strong>Pending Notification</strong></div>
+            </div>
+            <h2 class="card-title">Bharat 6G Alliance Strengthens Global Partnerships at 3rd International 6G Symposium</h2>
+            <div class="shift-box">
+                <div class="label-gold">Regulatory Shift</div>
+                <p>The Bharat 6G Alliance has formalized deeper strategic ties with global telecommunication bodies to co-develop international standards for 6G. This marks a shift toward placing Indian IP and technical specifications directly into global next-generation communication protocols.</p>
+            </div>
+            <div class="action-box">
+                <div class="label-navy">Counsel Action Items</div>
+                <ul><li>Review the company's patent and research portfolios to identify proprietary technologies that align with emerging 6G standards.</li><li>Track Department of Telecommunications (DoT) pilot funding programs and regulatory sandboxes for potential collaborative next-gen tech testing.</li><li>Incorporate 6G design parameters into long-term infrastructure and product development roadmaps.</li></ul>
+            </div>
+            <div class="card-footer">
+                <span>Sector: <strong>Tech & Digital Services</strong></span>
+                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321584" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
+            </div>
+            
+            <div class="card-cta-bar no-print">
+                <span>Reviewing contracts, employee IP, or compliance in this area?</span>
+                <a href="https://juridigm.in/contact" target="_blank" rel="noopener noreferrer">Request Legal Review &rarr;</a>
+            </div>
+        </article>
+        <article class="update-card" data-week="Week 40, 2026" data-authority="Other" data-domain="Corporate" data-impact="Medium">
+            <div class="card-meta">
+                <div class="meta-tags">
+                    <span class="badge badge-week">Week 40, 2026</span>
+                    <span class="badge" style="background:#fdfbf7;color:#926f27;border:1px solid #e8d7a7;">Medium Impact</span>
+                    <span class="badge badge-navy">Other</span>
+                    <span class="badge badge-indigo">Corporate</span>
+                </div>
+                <div class="effective-date">Effective: <strong>Immediate</strong></div>
+            </div>
+            <h2 class="card-title">Government Push for Private Investment and R&D in Defence Production</h2>
+            <div class="shift-box">
+                <div class="label-gold">Regulatory Shift</div>
+                <p>The Ministry of Defence has called for deeper private sector integration, particularly through local R&D investments and design partnerships. This shifts the focus from simple component sourcing to complex, high-value joint development under 'Make in India' frameworks.</p>
+            </div>
+            <div class="action-box">
+                <div class="label-navy">Counsel Action Items</div>
+                <ul><li>Assess feasibility of entering defense production supply chains or forming joint ventures under current liberalized FDI guidelines for defense.</li><li>Review eligibility for governmental R&D grants, fiscal incentives, and technology development funds targeted at private defense manufacturing.</li><li>Strengthen compliance controls around technology transfers, intellectual property protection, and dual-use export control laws.</li></ul>
+            </div>
+            <div class="card-footer">
+                <span>Sector: <strong>Manufacturing</strong></span>
+                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321585" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
+            </div>
+            
+        </article>
+        <article class="update-card" data-week="Week 40, 2026" data-authority="Other" data-domain="Employment & Labour" data-impact="Medium">
+            <div class="card-meta">
+                <div class="meta-tags">
+                    <span class="badge badge-week">Week 40, 2026</span>
+                    <span class="badge" style="background:#fdfbf7;color:#926f27;border:1px solid #e8d7a7;">Medium Impact</span>
+                    <span class="badge badge-navy">Other</span>
+                    <span class="badge badge-indigo">Employment & Labour</span>
+                </div>
+                <div class="effective-date">Effective: <strong>Ongoing under RPWD Act, 2016</strong></div>
+            </div>
+            <h2 class="card-title">DEPwD Mandate on Inclusive and Proactive Accessibility Standards</h2>
+            <div class="shift-box">
+                <div class="label-gold">Regulatory Shift</div>
+                <p>The Department of Empowerment of Persons with Disabilities (DEPwD) has reinforced that universal design and accessibility cannot be treated as post-facto adjustments. Corporates must build digital platforms and physical spaces to be natively accessible from inception under the Rights of Persons with Disabilities Rules.</p>
+            </div>
+            <div class="action-box">
+                <div class="label-navy">Counsel Action Items</div>
+                <ul><li>Conduct an immediate accessibility audit of corporate physical offices, retail outlets, and customer-facing mobile applications or websites.</li><li>Update internal IT procurement policies to ensure all third-party software and digital employee portals comply with Web Content Accessibility Guidelines (WCAG) 2.1 or equivalent Indian standards.</li><li>Liaise with HR and legal to update policies ensuring 'reasonable accommodation' frameworks are actively deployed for employees with disabilities.</li></ul>
+            </div>
+            <div class="card-footer">
+                <span>Sector: <strong>All Corporates</strong></span>
+                <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321590" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
+            </div>
+            
+            <div class="card-cta-bar no-print">
+                <span>Reviewing contracts, employee IP, or compliance in this area?</span>
+                <a href="https://juridigm.in/contact" target="_blank" rel="noopener noreferrer">Request Legal Review &rarr;</a>
+            </div>
+        </article>
         <article class="update-card" data-week="Week 40, 2026" data-authority="Other" data-domain="Corporate" data-impact="Medium">
             <div class="card-meta">
                 <div class="meta-tags">
@@ -105,10 +197,11 @@
                 <span>Sector: <strong>Healthcare</strong></span>
                 <a href="https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109" target="_blank" rel="noopener noreferrer">Primary Gazette / Source &rarr;</a>
             </div>
+            
         </article></main>
     </div>
 
-    <script id="archive-data" type="application/json">[{"title": "National Biodiversity Authority Secures INR 9.68 Crore Under Access and Benefit Sharing Framework", "authority": "Other", "law_domain": "Corporate", "sector": "Healthcare", "impact_level": "Medium", "priority_rank": 1, "effective_date": "Ongoing Compliance", "what_changed": "The National Biodiversity Authority (NBA) reported a collection of INR 9.68 Crore under the Access and Benefit Sharing (ABS) framework during the April-September period. This underscores a significant push toward stricter compliance monitoring and audit of corporate entities utilizing Indian biological resources, shifting away from historical leniency.", "inhouse_action_items": ["Conduct an internal audit of raw material sourcing to verify if any biological resources or traditional knowledge of Indian origin are utilized in manufacturing or R&D.", "Ensure all required approvals (Form I to Form IV) are active and filed with the NBA or State Biodiversity Boards for commercial exploitation and IP filings.", "Validate that ABS fee calculations align strictly with the Biological Diversity Regulations to avoid potential prosecution or operational blockages."], "source_url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109", "week_label": "Week 40, 2026"}]</script>
+    <script id="archive-data" type="application/json">[{"title": "Bharat 6G Alliance Strengthens Global Partnerships at 3rd International 6G Symposium", "authority": "Other", "law_domain": "AI & Emerging Tech", "sector": "Tech & Digital Services", "impact_level": "Medium", "priority_rank": 1, "effective_date": "Pending Notification", "what_changed": "The Bharat 6G Alliance has formalized deeper strategic ties with global telecommunication bodies to co-develop international standards for 6G. This marks a shift toward placing Indian IP and technical specifications directly into global next-generation communication protocols.", "inhouse_action_items": ["Review the company's patent and research portfolios to identify proprietary technologies that align with emerging 6G standards.", "Track Department of Telecommunications (DoT) pilot funding programs and regulatory sandboxes for potential collaborative next-gen tech testing.", "Incorporate 6G design parameters into long-term infrastructure and product development roadmaps."], "source_url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321584", "week_label": "Week 40, 2026"}, {"title": "Government Push for Private Investment and R&D in Defence Production", "authority": "Other", "law_domain": "Corporate", "sector": "Manufacturing", "impact_level": "Medium", "priority_rank": 2, "effective_date": "Immediate", "what_changed": "The Ministry of Defence has called for deeper private sector integration, particularly through local R&D investments and design partnerships. This shifts the focus from simple component sourcing to complex, high-value joint development under 'Make in India' frameworks.", "inhouse_action_items": ["Assess feasibility of entering defense production supply chains or forming joint ventures under current liberalized FDI guidelines for defense.", "Review eligibility for governmental R&D grants, fiscal incentives, and technology development funds targeted at private defense manufacturing.", "Strengthen compliance controls around technology transfers, intellectual property protection, and dual-use export control laws."], "source_url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321585", "week_label": "Week 40, 2026"}, {"title": "DEPwD Mandate on Inclusive and Proactive Accessibility Standards", "authority": "Other", "law_domain": "Employment & Labour", "sector": "All Corporates", "impact_level": "Medium", "priority_rank": 3, "effective_date": "Ongoing under RPWD Act, 2016", "what_changed": "The Department of Empowerment of Persons with Disabilities (DEPwD) has reinforced that universal design and accessibility cannot be treated as post-facto adjustments. Corporates must build digital platforms and physical spaces to be natively accessible from inception under the Rights of Persons with Disabilities Rules.", "inhouse_action_items": ["Conduct an immediate accessibility audit of corporate physical offices, retail outlets, and customer-facing mobile applications or websites.", "Update internal IT procurement policies to ensure all third-party software and digital employee portals comply with Web Content Accessibility Guidelines (WCAG) 2.1 or equivalent Indian standards.", "Liaise with HR and legal to update policies ensuring 'reasonable accommodation' frameworks are actively deployed for employees with disabilities."], "source_url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321590", "week_label": "Week 40, 2026"}, {"title": "National Biodiversity Authority Secures INR 9.68 Crore Under Access and Benefit Sharing Framework", "authority": "Other", "law_domain": "Corporate", "sector": "Healthcare", "impact_level": "Medium", "priority_rank": 1, "effective_date": "Ongoing Compliance", "what_changed": "The National Biodiversity Authority (NBA) reported a collection of INR 9.68 Crore under the Access and Benefit Sharing (ABS) framework during the April-September period. This underscores a significant push toward stricter compliance monitoring and audit of corporate entities utilizing Indian biological resources, shifting away from historical leniency.", "inhouse_action_items": ["Conduct an internal audit of raw material sourcing to verify if any biological resources or traditional knowledge of Indian origin are utilized in manufacturing or R&D.", "Ensure all required approvals (Form I to Form IV) are active and filed with the NBA or State Biodiversity Boards for commercial exploitation and IP filings.", "Validate that ABS fee calculations align strictly with the Biological Diversity Regulations to avoid potential prosecution or operational blockages."], "source_url": "https://pib.gov.in/PressReleaseIframePage.aspx?PRID=2321109", "week_label": "Week 40, 2026"}]</script>
     <script>
         function applyFilters() {
             const week = document.getElementById('weekFilter').value;
@@ -140,7 +233,6 @@
             applyFilters();
         }
 
-        // Show the current week by default on page load
         applyFilters();
     </script>
 </body>
