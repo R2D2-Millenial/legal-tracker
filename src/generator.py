@@ -5,7 +5,6 @@ Maintains weekly digests, updates the persistent archive, and builds index.html.
 
 import json
 import os
-import re
 from datetime import datetime
 
 # --- Paths Configuration ---
@@ -145,14 +144,13 @@ def render_card(item):
 
 
 def build_html_dashboard(updates, archive_count):
-    """Builds the comprehensive, responsive HTML document."""
+    """Builds the comprehensive, responsive HTML document with token replacement."""
     current_date = datetime.utcnow().strftime("%B %d, %Y")
-    
+
     # Calculate Metrics
     total_count = len(updates)
     high_impact_count = sum(1 for u in updates if u.get("impact", "").lower() == "high")
     tech_privacy_count = sum(1 for u in updates if u.get("domain", "").strip().lower() in TECH_PRIVACY_DOMAINS or "ai" in u.get("domain", "").lower() or "dpdp" in u.get("domain", "").lower())
-    corporate_count = sum(1 for u in updates if "corporate" in u.get("domain", "").lower() or "securities" in u.get("domain", "").lower() or "mca" in u.get("authority", "").lower() or "sebi" in u.get("authority", "").lower())
 
     cards_html = "\n".join(render_card(u) for u in updates) if updates else """
         <div class="no-records">
@@ -160,7 +158,6 @@ def build_html_dashboard(updates, archive_count):
         </div>
     """
 
-    # Template using safe token replacement to avoid CSS/JS brace conflicts
     html_template = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -168,8 +165,8 @@ def build_html_dashboard(updates, archive_count):
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juridigm Shift — Indian Regulatory & AI Intelligence</title>
 
-    <!-- Branded Shield Favicon (Embedded Vector) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 12 L82 24 V48 C82 68 68 84 50 90 C32 84 18 68 18 48 V24 Z' fill='%23030712' stroke='%23d97706' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M38 34 H62 V66 H38 Z' fill='none' stroke='%23fbbf24' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M54 52 L59 57 L68 46' fill='none' stroke='%2338bdf8' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <!-- Juridigm Balanced Lens Vector Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M12 50 C 28 20, 72 20, 88 50 C 72 80, 28 80, 12 50 Z' fill='%23030712' stroke='%23d97706' stroke-width='6' stroke-linejoin='round'/%3E%3Cpath d='M32 50 C 40 34, 60 34, 68 50 C 60 66, 40 66, 32 50 Z' fill='none' stroke='%23fbbf24' stroke-width='4'/%3E%3Ccircle cx='50' cy='50' r='7' fill='%2338bdf8'/%3E%3C/svg%3E">
 
     <!-- Mobile Browser Header Theming -->
     <meta name="theme-color" content="#030712">
@@ -256,6 +253,24 @@ def build_html_dashboard(updates, archive_count):
             100% { transform: translate(-40px, 80px) scale(0.95); }
         }
 
+        /* Ambient Floating Watermark Emblem */
+        .bg-watermark-logo {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px; height: 600px;
+            z-index: -1;
+            opacity: 0.03;
+            pointer-events: none;
+            animation: pulseWatermark 14s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulseWatermark {
+            0% { transform: translate(-50%, -50%) scale(0.96) rotate(0deg); opacity: 0.025; }
+            50% { transform: translate(-50%, -52%) scale(1.04) rotate(1deg); opacity: 0.045; }
+            100% { transform: translate(-50%, -48%) scale(0.98) rotate(-1deg); opacity: 0.03; }
+        }
+
         .container {
             max-width: 1360px;
             margin: 0 auto;
@@ -288,13 +303,15 @@ def build_html_dashboard(updates, archive_count):
             border: 1.5px solid var(--glass-border);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
+            overflow: hidden;
+            flex-shrink: 0;
         }
         .logo-badge:hover {
             transform: scale(1.05);
             box-shadow: 0 0 25px var(--brand-gold-glow);
             border-color: var(--brand-amber);
         }
-        .logo-badge svg { width: 32px; height: 32px; }
+        .logo-badge svg { width: 34px; height: 34px; filter: drop-shadow(0 2px 6px rgba(217, 119, 6, 0.45)); }
 
         .brand-text h1 {
             font-size: 1.35rem;
@@ -684,15 +701,34 @@ def build_html_dashboard(updates, archive_count):
         <div class="orb orb-3"></div>
     </div>
 
+    <!-- Ambient Floating Juridigm Balanced Lens Watermark -->
+    <div class="bg-watermark-logo">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 50 C 28 20, 72 20, 88 50 C 72 80, 28 80, 12 50 Z" stroke="#d97706" stroke-width="4" stroke-linejoin="round" />
+            <path d="M32 50 C 40 34, 60 34, 68 50 C 60 66, 40 66, 32 50 Z" stroke="#fbbf24" stroke-width="3" stroke-linejoin="round" />
+            <circle cx="50" cy="50" r="7" fill="#38bdf8" />
+        </svg>
+    </div>
+
     <div class="container">
         <!-- Top Navigation -->
         <header class="top-navbar">
             <a href="https://juridigm.in" class="brand-cluster">
                 <div class="logo-badge">
+                    <!-- Juridigm Balanced Lens Logo Adapted to Shift Palette -->
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M50 12 L82 24 V48 C82 68 68 84 50 90 C32 84 18 68 18 48 V24 Z" stroke="#d97706" stroke-width="5" stroke-linejoin="round" />
-                        <path d="M38 34 H62 V66 H38 Z" stroke="#fbbf24" stroke-width="3.5" stroke-linejoin="round" />
-                        <path d="M54 52 L59 57 L68 46" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+                        <defs>
+                            <linearGradient id="lensGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#fbbf24" />
+                                <stop offset="100%" stop-color="#d97706" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Balanced Lens Outer Contour -->
+                        <path d="M12 50 C 28 20, 72 20, 88 50 C 72 80, 28 80, 12 50 Z" stroke="url(#lensGold)" stroke-width="5" stroke-linejoin="round" />
+                        <!-- Inner Focus Mark -->
+                        <path d="M32 50 C 40 34, 60 34, 68 50 C 60 66, 40 66, 32 50 Z" stroke="#fbbf24" stroke-width="3" opacity="0.85" />
+                        <!-- Rising Clarity Pivot -->
+                        <circle cx="50" cy="50" r="6" fill="#38bdf8" />
                     </svg>
                 </div>
                 <div class="brand-text">
@@ -765,7 +801,7 @@ def build_html_dashboard(updates, archive_count):
         </footer>
     </div>
 
-    <!-- Client-Side Vanilla JS for Fast Filtering -->
+    <!-- Client-Side Vanilla JS for Filtering -->
     <script>
         let currentFilter = 'all';
 
@@ -814,7 +850,7 @@ def build_html_dashboard(updates, archive_count):
 </html>
 """
 
-    # Populate the placeholders
+    # Populate template tokens safely
     output = html_template.replace("__TOTAL_COUNT__", str(total_count))
     output = output.replace("__HIGH_IMPACT_COUNT__", str(high_impact_count))
     output = output.replace("__TECH_COUNT__", str(tech_privacy_count))
