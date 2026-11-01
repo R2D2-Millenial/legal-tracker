@@ -1,0 +1,14 @@
+[
+  {
+    "id": "notice-active-surveillance",
+    "title": "Automated Legal Surveillance Pipeline Active",
+    "authority": "Juridigm Regulatory Watch",
+    "domain": "Corporate & Securities",
+    "impact": "Low",
+    "date": "2026-11-01",
+    "summary": "Feed ingestion active across MeitY, MCA, SEBI, and RBI. Full circular synthesis will refresh in the next automated cycle.",
+    "in_house_takeaway": "No immediate compliance intervention required. System operational.",
+    "source_url": "[https://juridigm.in](https://juridigm.in)",
+    "week_label": "Week of Oct 26, 2026"
+  }
+]
