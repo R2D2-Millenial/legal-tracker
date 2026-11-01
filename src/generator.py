@@ -1,11 +1,11 @@
 """
 Juridigm Shift - Automated Regulatory & AI Intelligence Portal Generator
-Maintains weekly digests, updates the persistent archive, and builds index.html.
+Maintains weekly digests, synchronizes persistent archive, and builds full filterable index.html.
 """
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- Paths Configuration ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,34 +46,55 @@ def save_json(filepath, data):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def compute_week_label(date_str):
+    """Derives a normalized 'Week of Mon DD, YYYY' string from a date."""
+    if not date_str:
+        now = datetime.utcnow()
+        monday = now - timedelta(days=now.weekday())
+        return f"Week of {monday.strftime('%b %d, %Y')}"
+    try:
+        clean_date = str(date_str)[:10]
+        dt = datetime.strptime(clean_date, "%Y-%m-%d")
+        monday = dt - timedelta(days=dt.weekday())
+        return f"Week of {monday.strftime('%b %d, %Y')}"
+    except Exception:
+        now = datetime.utcnow()
+        monday = now - timedelta(days=now.weekday())
+        return f"Week of {monday.strftime('%b %d, %Y')}"
+
+
 def sync_archive(new_updates):
-    """Merges newly fetched updates into the cumulative archive.json without duplicates."""
+    """Merges new weekly updates into archive.json, assigning week labels and deduplicating."""
     archive = load_json(ARCHIVE_FILE, default=[])
     seen_identifiers = set()
 
-    # Deduplicate existing records by ID or normalized title
+    # Normalize existing archive records
     for item in archive:
+        if "week_label" not in item or not item["week_label"]:
+            item["week_label"] = compute_week_label(item.get("date"))
         identifier = item.get("id") or item.get("title", "").strip().lower()
         if identifier:
             seen_identifiers.add(identifier)
 
     added_count = 0
     for item in new_updates:
+        if "week_label" not in item or not item["week_label"]:
+            item["week_label"] = compute_week_label(item.get("date"))
         identifier = item.get("id") or item.get("title", "").strip().lower()
         if identifier and identifier not in seen_identifiers:
             archive.append(item)
             seen_identifiers.add(identifier)
             added_count += 1
 
-    # Sort archive newest first (by date)
-    archive.sort(key=lambda x: x.get("date", ""), reverse=True)
+    # Sort archive newest first by date
+    archive.sort(key=lambda x: str(x.get("date", "")), reverse=True)
     save_json(ARCHIVE_FILE, archive)
     print(f"[*] Archive synchronized: {added_count} new updates added (Total: {len(archive)})")
     return archive
 
 
 def render_card(item):
-    """Generates an individual liquid-glass regulatory update card."""
+    """Generates an individual liquid-glass regulatory update card with data attributes for JS filtering."""
     title = item.get("title", "Untitled Regulatory Update")
     authority = item.get("authority", "Official Authority")
     domain = item.get("domain", "Regulatory Compliance")
@@ -82,6 +103,7 @@ def render_card(item):
     summary = item.get("summary", "No summary provided.")
     takeaway = item.get("in_house_takeaway") or item.get("takeaway", "")
     source_url = item.get("source_url") or item.get("link", "#")
+    week_label = item.get("week_label") or compute_week_label(date_str)
 
     # Impact badge CSS class
     impact_class = "impact-medium"
@@ -92,7 +114,8 @@ def render_card(item):
 
     # Contextual CTA Banner for Tech, AI & Privacy items
     selective_cta_html = ""
-    if domain.strip().lower() in TECH_PRIVACY_DOMAINS or "ai" in domain.lower() or "dpdp" in domain.lower():
+    dom_lower = domain.strip().lower()
+    if dom_lower in TECH_PRIVACY_DOMAINS or "ai" in dom_lower or "dpdp" in dom_lower:
         selective_cta_html = f"""
         <div class="card-advisory-cta">
             <div class="advisory-text">
@@ -123,7 +146,11 @@ def render_card(item):
         """
 
     return f"""
-    <article class="tracker-card" data-domain="{domain.lower()}" data-impact="{impact.lower()}">
+    <article class="tracker-card" 
+             data-week="{week_label}" 
+             data-domain="{domain.lower()}" 
+             data-authority="{authority.lower()}" 
+             data-impact="{impact.lower()}">
         <div class="card-header">
             <div class="meta-row">
                 <span class="badge badge-authority">{authority}</span>
@@ -137,24 +164,48 @@ def render_card(item):
         {takeaway_html}
         {selective_cta_html}
         <div class="card-footer">
+            <span class="card-week-tag">📅 {week_label}</span>
             {source_html}
         </div>
     </article>
     """
 
 
-def build_html_dashboard(updates, archive_count):
-    """Builds the comprehensive, responsive HTML document with token replacement."""
+def build_html_dashboard(all_updates):
+    """Builds the comprehensive HTML interface embedding ALL updates with dynamic client filtering."""
     current_date = datetime.utcnow().strftime("%B %d, %Y")
 
-    # Calculate Metrics
-    total_count = len(updates)
-    high_impact_count = sum(1 for u in updates if u.get("impact", "").lower() == "high")
-    tech_privacy_count = sum(1 for u in updates if u.get("domain", "").strip().lower() in TECH_PRIVACY_DOMAINS or "ai" in u.get("domain", "").lower() or "dpdp" in u.get("domain", "").lower())
+    # Extract Unique Weeks in chronological order (newest first)
+    unique_weeks = []
+    for u in all_updates:
+        wl = u.get("week_label")
+        if wl and wl not in unique_weeks:
+            unique_weeks.append(wl)
+    if not unique_weeks:
+        unique_weeks = [compute_week_label(None)]
 
-    cards_html = "\n".join(render_card(u) for u in updates) if updates else """
+    latest_week = unique_weeks[0]
+
+    # Extract Unique Authorities and Domains for Dropdowns
+    unique_authorities = sorted(list({u.get("authority", "").strip() for u in all_updates if u.get("authority", "").strip()}))
+    unique_domains = sorted(list({u.get("domain", "").strip() for u in all_updates if u.get("domain", "").strip()}))
+
+    # Generate Options HTML
+    week_options_html = "\n".join([f'<option value="{w}">{w}</option>' for w in unique_weeks])
+    authority_options_html = "\n".join([f'<option value="{a.lower()}">{a}</option>' for a in unique_authorities])
+    domain_options_html = "\n".join([f'<option value="{d.lower()}">{d}</option>' for d in unique_domains])
+
+    # Summary Metrics
+    current_week_updates = [u for u in all_updates if u.get("week_label") == latest_week]
+    current_digest_count = len(current_week_updates) if current_week_updates else len(all_updates)
+    high_impact_count = sum(1 for u in all_updates if u.get("impact", "").lower() == "high")
+    tech_count = sum(1 for u in all_updates if u.get("domain", "").strip().lower() in TECH_PRIVACY_DOMAINS or "ai" in u.get("domain", "").lower() or "dpdp" in u.get("domain", "").lower())
+    total_archive_count = len(all_updates)
+
+    # Render ALL cards
+    cards_html = "\n".join(render_card(u) for u in all_updates) if all_updates else """
         <div class="no-records">
-            <p>No new circulars found for this period. Historical records are preserved in the archive below.</p>
+            <p>No regulatory records available in the tracker.</p>
         </div>
     """
 
@@ -178,7 +229,7 @@ def build_html_dashboard(updates, archive_count):
     <meta name="description" content="Automated regulatory tracking, AI governance, data privacy compliance, and commercial legal intelligence curated by Juridigm.">
     <link rel="canonical" href="https://shift.juridigm.in">
 
-    <!-- Open Graph / LinkedIn, WhatsApp & Slack Link Previews -->
+    <!-- Open Graph / LinkedIn & Social Link Previews -->
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://shift.juridigm.in">
     <meta property="og:site_name" content="Juridigm Shift">
@@ -253,7 +304,7 @@ def build_html_dashboard(updates, archive_count):
             100% { transform: translate(-40px, 80px) scale(0.95); }
         }
 
-        /* Ambient Floating Watermark Emblem */
+        /* Ambient Watermark */
         .bg-watermark-logo {
             position: fixed;
             top: 50%; left: 50%;
@@ -385,7 +436,7 @@ def build_html_dashboard(updates, archive_count):
         .portal-header p {
             color: var(--text-muted);
             font-size: 0.96rem;
-            max-width: 800px;
+            max-width: 820px;
             line-height: 1.5;
         }
 
@@ -394,7 +445,7 @@ def build_html_dashboard(updates, archive_count):
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
-            margin-bottom: 32px;
+            margin-bottom: 30px;
         }
         .metric-card {
             background: var(--glass-card);
@@ -431,60 +482,117 @@ def build_html_dashboard(updates, archive_count):
             color: var(--text-muted);
         }
 
-        /* Filter & Search Controls */
+        /* Comprehensive Filter & Search Controls Panel */
         .controls-panel {
             background: var(--glass-card);
             border: 1px solid var(--glass-border);
-            border-radius: 18px;
-            padding: 16px 20px;
-            margin-bottom: 28px;
+            border-radius: 20px;
+            padding: 22px 24px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .control-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: var(--brand-amber);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .filter-select, .search-input {
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-size: 0.86rem;
+            outline: none;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+
+        .filter-select:focus, .search-input:focus {
+            border-color: var(--brand-amber);
+            box-shadow: 0 0 16px var(--brand-gold-glow);
+        }
+
+        .filter-select option {
+            background: #0f172a;
+            color: #f8fafc;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .search-row .control-group {
+            flex: 1;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .active-filter-tags {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-            backdrop-filter: blur(25px);
-        }
-        .filter-tabs {
-            display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
-        .filter-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            padding: 8px 14px;
-            border-radius: 10px;
-            font-size: 0.8rem;
+
+        .active-tag {
+            background: rgba(217, 119, 6, 0.2);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            color: #fbbf24;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-weight: 600;
+        }
+
+        .btn-reset {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #e2e8f0;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
         }
-        .filter-btn:hover, .filter-btn.active {
-            background: rgba(217, 119, 6, 0.22);
+
+        .btn-reset:hover {
+            background: rgba(217, 119, 6, 0.2);
             border-color: var(--brand-amber);
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(217, 119, 6, 0.3);
-        }
-        .search-box {
-            position: relative;
-            min-width: 280px;
-        }
-        .search-input {
-            width: 100%;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid var(--glass-border);
-            border-radius: 10px;
-            padding: 9px 14px;
-            color: var(--text-main);
-            font-size: 0.85rem;
-            outline: none;
-            transition: all 0.2s;
-        }
-        .search-input:focus {
-            border-color: var(--brand-amber);
-            box-shadow: 0 0 16px var(--brand-gold-glow);
         }
 
         /* Updates Grid */
@@ -599,7 +707,7 @@ def build_html_dashboard(updates, archive_count):
             line-height: 1.45;
         }
 
-        /* Selective Tech/Privacy Review Banner */
+        /* Advisory Banner */
         .card-advisory-cta {
             background: rgba(217, 119, 6, 0.12);
             border: 1px dashed rgba(251, 191, 36, 0.45);
@@ -635,10 +743,15 @@ def build_html_dashboard(updates, archive_count):
         .card-footer {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
+            justify-content: space-between;
             margin-top: auto;
             padding-top: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .card-week-tag {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            font-weight: 500;
         }
         .card-link {
             color: #38bdf8;
@@ -682,13 +795,17 @@ def build_html_dashboard(updates, archive_count):
             text-decoration: underline;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
+            .filters-grid { grid-template-columns: repeat(2, 1fr); }
             .metrics-grid { grid-template-columns: repeat(2, 1fr); }
             .updates-grid { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .filters-grid { grid-template-columns: 1fr; }
             .top-navbar { flex-direction: column; align-items: flex-start; gap: 16px; }
             .header-actions { width: 100%; justify-content: flex-start; }
-            .controls-panel { flex-direction: column; align-items: stretch; }
-            .search-box { min-width: 100%; }
+            .status-bar { flex-direction: column; align-items: flex-start; }
         }
     </style>
 </head>
@@ -715,7 +832,6 @@ def build_html_dashboard(updates, archive_count):
         <header class="top-navbar">
             <a href="https://juridigm.in" class="brand-cluster">
                 <div class="logo-badge">
-                    <!-- Juridigm Balanced Lens Logo Adapted to Shift Palette -->
                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <defs>
                             <linearGradient id="lensGold" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -723,11 +839,8 @@ def build_html_dashboard(updates, archive_count):
                                 <stop offset="100%" stop-color="#d97706" />
                             </linearGradient>
                         </defs>
-                        <!-- Balanced Lens Outer Contour -->
                         <path d="M12 50 C 28 20, 72 20, 88 50 C 72 80, 28 80, 12 50 Z" stroke="url(#lensGold)" stroke-width="5" stroke-linejoin="round" />
-                        <!-- Inner Focus Mark -->
                         <path d="M32 50 C 40 34, 60 34, 68 50 C 60 66, 40 66, 32 50 Z" stroke="#fbbf24" stroke-width="3" opacity="0.85" />
-                        <!-- Rising Clarity Pivot -->
                         <circle cx="50" cy="50" r="6" fill="#38bdf8" />
                     </svg>
                 </div>
@@ -746,7 +859,7 @@ def build_html_dashboard(updates, archive_count):
 
         <!-- Main Banner -->
         <section class="portal-header">
-            <div class="tagline">Weekly Executive Intelligence Digest</div>
+            <div class="tagline">Executive Intelligence Digest & Persistent Archive</div>
             <h2>Live Regulatory Trajectory</h2>
             <p>Automated intelligence tracking updates across DPDP regulations, MeitY directives, RBI FinTech circulars, SEBI compliances, and corporate commercial law in India.</p>
         </section>
@@ -755,43 +868,95 @@ def build_html_dashboard(updates, archive_count):
         <section class="metrics-grid">
             <div class="metric-card">
                 <div class="title">Current Digest</div>
-                <div class="val">__TOTAL_COUNT__</div>
-                <div class="sub">Updates for week of __GENERATED_DATE__</div>
+                <div class="val">__CURRENT_DIGEST_COUNT__</div>
+                <div class="sub">Latest edition: __LATEST_WEEK__</div>
             </div>
             <div class="metric-card">
                 <div class="title">High Impact Actions</div>
                 <div class="val">__HIGH_IMPACT_COUNT__</div>
-                <div class="sub">Immediate attention required</div>
+                <div class="sub">Critical attention items across archive</div>
             </div>
             <div class="metric-card">
                 <div class="title">Tech & Privacy</div>
                 <div class="val">__TECH_COUNT__</div>
-                <div class="sub">AI, DPDP, Cyber & IT Law</div>
+                <div class="sub">AI, DPDP, Cyber & IT Law updates</div>
             </div>
             <div class="metric-card">
                 <div class="title">Historical Archive</div>
-                <div class="val">__ARCHIVE_COUNT__</div>
+                <div class="val">__TOTAL_ARCHIVE_COUNT__</div>
                 <div class="sub">Preserved intelligence records</div>
             </div>
         </section>
 
-        <!-- Filters & Search Toolbar -->
+        <!-- Comprehensive Filter & Search Controls Panel -->
         <div class="controls-panel">
-            <div class="filter-tabs">
-                <button class="filter-btn active" onclick="filterDomain('all', this)">All Updates</button>
-                <button class="filter-btn" onclick="filterDomain('ai & emerging tech', this)">AI & Tech</button>
-                <button class="filter-btn" onclick="filterDomain('data privacy & dpdp', this)">Data Privacy</button>
-                <button class="filter-btn" onclick="filterDomain('corporate', this)">Corporate & Securities</button>
-                <button class="filter-btn" onclick="filterDomain('high-impact', this)">High Impact Only</button>
+            <div class="filters-grid">
+                <!-- 1. Edition / Week Selector -->
+                <div class="control-group">
+                    <label class="control-label" for="weekFilter">Timeline / Edition</label>
+                    <select id="weekFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="current" selected>⚡ Current Week (Latest Edition)</option>
+                        <option value="all">📚 All Editions (Complete History)</option>
+                        <optgroup label="Past Individual Editions">
+                            __WEEK_OPTIONS__
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- 2. Legal Domain / Topic Selector -->
+                <div class="control-group">
+                    <label class="control-label" for="domainFilter">Topic / Legal Domain</label>
+                    <select id="domainFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="all" selected>All Legal Domains</option>
+                        __DOMAIN_OPTIONS__
+                    </select>
+                </div>
+
+                <!-- 3. Authority / Regulator Selector -->
+                <div class="control-group">
+                    <label class="control-label" for="authorityFilter">Sector / Regulator</label>
+                    <select id="authorityFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="all" selected>All Regulators & Authorities</option>
+                        __AUTHORITY_OPTIONS__
+                    </select>
+                </div>
+
+                <!-- 4. Impact Level Selector -->
+                <div class="control-group">
+                    <label class="control-label" for="impactFilter">Impact Urgency</label>
+                    <select id="impactFilter" class="filter-select" onchange="applyFilters()">
+                        <option value="all" selected>All Impact Levels</option>
+                        <option value="high">🔴 High Impact Only</option>
+                        <option value="medium">🟡 Medium Impact</option>
+                        <option value="low">🔵 Low Impact</option>
+                    </select>
+                </div>
             </div>
-            <div class="search-box">
-                <input type="text" id="trackerSearch" class="search-input" placeholder="🔍 Search circulars, keywords, or authority..." onkeyup="handleSearch()">
+
+            <!-- Keyword Search Row -->
+            <div class="search-row">
+                <div class="control-group">
+                    <input type="text" id="trackerSearch" class="search-input" placeholder="🔍 Search circular title, takeaway, regulation, or keywords..." onkeyup="applyFilters()">
+                </div>
+            </div>
+
+            <!-- Dynamic Status Bar -->
+            <div class="status-bar">
+                <div class="active-filter-tags">
+                    <span id="resultsCount">Loading updates...</span>
+                    <span id="viewingTag" class="active-tag">Current Week</span>
+                </div>
+                <button class="btn-reset" onclick="resetFilters()">↺ Reset to Current Week</button>
             </div>
         </div>
 
         <!-- Cards Display Area -->
         <main class="updates-grid" id="updatesGrid">
             __CARDS_HTML__
+            <div id="emptyFilterNotice" class="no-records" style="display: none;">
+                <p>No circulars match your current filter criteria.</p>
+                <button class="btn-reset" style="margin-top: 14px;" onclick="resetFilters()">Reset to Current Week</button>
+            </div>
         </main>
 
         <!-- Footer -->
@@ -801,49 +966,92 @@ def build_html_dashboard(updates, archive_count):
         </footer>
     </div>
 
-    <!-- Client-Side Vanilla JS for Filtering -->
+    <!-- Client-Side Vanilla JS for Real-Time Multi-Dimensional Filtering -->
     <script>
-        let currentFilter = 'all';
+        const LATEST_WEEK = "__LATEST_WEEK__";
 
-        function filterDomain(domainKey, btn) {
-            currentFilter = domainKey;
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            if (btn) btn.classList.add('active');
+        document.addEventListener("DOMContentLoaded", () => {
             applyFilters();
-        }
-
-        function handleSearch() {
-            applyFilters();
-        }
+        });
 
         function applyFilters() {
+            const selectedWeek = document.getElementById('weekFilter').value;
+            const selectedDomain = document.getElementById('domainFilter').value.toLowerCase().trim();
+            const selectedAuthority = document.getElementById('authorityFilter').value.toLowerCase().trim();
+            const selectedImpact = document.getElementById('impactFilter').value.toLowerCase().trim();
             const searchQuery = document.getElementById('trackerSearch').value.toLowerCase().trim();
+
             const cards = document.querySelectorAll('.tracker-card');
+            let visibleCount = 0;
 
             cards.forEach(card => {
-                const domain = card.getAttribute('data-domain') || '';
-                const impact = card.getAttribute('data-impact') || '';
+                const cardWeek = (card.getAttribute('data-week') || '').trim();
+                const cardDomain = (card.getAttribute('data-domain') || '').trim();
+                const cardAuthority = (card.getAttribute('data-authority') || '').trim();
+                const cardImpact = (card.getAttribute('data-impact') || '').trim();
                 const cardText = card.innerText.toLowerCase();
 
-                let matchesDomain = false;
-                if (currentFilter === 'all') {
-                    matchesDomain = true;
-                } else if (currentFilter === 'high-impact') {
-                    matchesDomain = (impact === 'high');
-                } else if (currentFilter === 'corporate') {
-                    matchesDomain = domain.includes('corporate') || domain.includes('securities') || domain.includes('finance') || domain.includes('tax');
+                // 1. Week Matching
+                let matchesWeek = false;
+                if (selectedWeek === 'all') {
+                    matchesWeek = true;
+                } else if (selectedWeek === 'current') {
+                    matchesWeek = (cardWeek === LATEST_WEEK);
                 } else {
-                    matchesDomain = domain.includes(currentFilter);
+                    matchesWeek = (cardWeek === selectedWeek);
                 }
 
-                const matchesSearch = !searchQuery || cardText.includes(searchQuery);
+                // 2. Domain Matching
+                let matchesDomain = (selectedDomain === 'all') || cardDomain.includes(selectedDomain);
 
-                if (matchesDomain && matchesSearch) {
+                // 3. Authority Matching
+                let matchesAuthority = (selectedAuthority === 'all') || cardAuthority.includes(selectedAuthority);
+
+                // 4. Impact Matching
+                let matchesImpact = (selectedImpact === 'all') || (cardImpact === selectedImpact);
+
+                // 5. Search Text Matching
+                let matchesSearch = !searchQuery || cardText.includes(searchQuery);
+
+                if (matchesWeek && matchesDomain && matchesAuthority && matchesImpact && matchesSearch) {
                     card.style.display = 'flex';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+
+            // Update Counts and Tag
+            const countElem = document.getElementById('resultsCount');
+            if (countElem) {
+                countElem.innerText = `Showing ${visibleCount} of ${cards.length} updates`;
+            }
+
+            const tagElem = document.getElementById('viewingTag');
+            if (tagElem) {
+                if (selectedWeek === 'current') {
+                    tagElem.innerText = `Edition: ${LATEST_WEEK}`;
+                } else if (selectedWeek === 'all') {
+                    tagElem.innerText = "All Editions (Complete History)";
+                } else {
+                    tagElem.innerText = `Edition: ${selectedWeek}`;
+                }
+            }
+
+            // Toggle empty state
+            const emptyNotice = document.getElementById('emptyFilterNotice');
+            if (emptyNotice) {
+                emptyNotice.style.display = (visibleCount === 0) ? 'block' : 'none';
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('weekFilter').value = 'current';
+            document.getElementById('domainFilter').value = 'all';
+            document.getElementById('authorityFilter').value = 'all';
+            document.getElementById('impactFilter').value = 'all';
+            document.getElementById('trackerSearch').value = '';
+            applyFilters();
         }
     </script>
 </body>
@@ -851,11 +1059,14 @@ def build_html_dashboard(updates, archive_count):
 """
 
     # Populate template tokens safely
-    output = html_template.replace("__TOTAL_COUNT__", str(total_count))
+    output = html_template.replace("__CURRENT_DIGEST_COUNT__", str(current_digest_count))
     output = output.replace("__HIGH_IMPACT_COUNT__", str(high_impact_count))
-    output = output.replace("__TECH_COUNT__", str(tech_privacy_count))
-    output = output.replace("__ARCHIVE_COUNT__", str(archive_count))
-    output = output.replace("__GENERATED_DATE__", current_date)
+    output = output.replace("__TECH_COUNT__", str(tech_count))
+    output = output.replace("__TOTAL_ARCHIVE_COUNT__", str(total_archive_count))
+    output = output.replace("__LATEST_WEEK__", latest_week)
+    output = output.replace("__WEEK_OPTIONS__", week_options_html)
+    output = output.replace("__DOMAIN_OPTIONS__", domain_options_html)
+    output = output.replace("__AUTHORITY_OPTIONS__", authority_options_html)
     output = output.replace("__CARDS_HTML__", cards_html)
 
     return output
@@ -870,18 +1081,17 @@ def main():
     # Synchronize updates into permanent archive
     archive = sync_archive(new_updates)
 
-    # Determine what to display on the active dashboard:
-    # If this week has updates, show them. If empty, fall back to recent records from the archive.
-    display_updates = new_updates if new_updates else archive[:10]
+    # Use entire archive so both past editions and new updates are available
+    all_updates = archive if archive else new_updates
 
     # Render dashboard
-    html_content = build_html_dashboard(display_updates, len(archive))
+    html_content = build_html_dashboard(all_updates)
 
     # Write output to index.html in the repo root
     with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"[✓] Successfully generated {OUTPUT_HTML} with {len(display_updates)} active updates.")
+    print(f"[✓] Successfully generated {OUTPUT_HTML} with {len(all_updates)} total updates embedded.")
 
 
 if __name__ == "__main__":
