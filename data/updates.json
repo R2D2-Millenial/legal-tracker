@@ -1,13 +1,24 @@
 [
   {
-    "id": "notice-active-surveillance",
-    "title": "Automated Legal Surveillance Pipeline Active",
-    "authority": "Juridigm Regulatory Watch",
-    "domain": "Corporate & Securities",
-    "impact": "Low",
+    "id": "bankers-books-evidence-framework-2026",
+    "title": "Legal Admissibility Standards for Digital Financial Records and Bankers' Books",
+    "authority": "Ministry of Finance",
+    "domain": "FinTech & Banking",
+    "impact": "Medium",
     "date": "2026-11-01",
-    "summary": "Feed ingestion active across MeitY, MCA, SEBI, and RBI. Full circular synthesis will refresh in the next automated cycle.",
-    "in_house_takeaway": "No immediate compliance intervention required. System operational.",
-    "source_url": "[https://juridigm.in](https://juridigm.in)"
+    "summary": "The regulatory briefing highlights statutory standards governing the admissibility and certification of digital ledgers and electronic banking books in judicial and administrative proceedings. It aligns digital documentation and electronic data extraction from core banking platforms with contemporary evidentiary jurisprudence.",
+    "in_house_takeaway": "In-house legal and fintech compliance teams must update core record retention policies, ensure tamper-evident audit trails for digital ledgers, and institutionalize streamlined certification processes for digital financial evidence produced in recovery suits and dispute arbitration.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151060"
+  },
+  {
+    "id": "regulatory-enforcement-imei-tampering-cybersecurity",
+    "title": "Regulatory Compliance and Penal Provisions Governing IMEI Integrity",
+    "authority": "MeitY",
+    "domain": "Telecom & Cyber",
+    "impact": "Medium",
+    "date": "2026-11-01",
+    "summary": "Statutory guidance underscores strict penal prohibitions against the manipulation, reprogramming, or spoofing of International Mobile Equipment Identity (IMEI) numbers under cyber and telecommunication safety frameworks. The enforcement architecture mandates telecom and device compliance via the Central Equipment Identity Register (CEIR) to eliminate counterfeit and blacklisted hardware.",
+    "in_house_takeaway": "Enterprise mobility, procurement, and cybersecurity teams must review supplier contracts to mandate CEIR-compliant hardware verification, conduct audits on enterprise-managed devices, and implement internal controls ensuring no modified or unauthenticated cellular equipment operates on enterprise networks.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151040"
   }
 ]
