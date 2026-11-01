@@ -2,12 +2,19 @@ name: Weekly Legal Intelligence Dispatch
 
 on:
   schedule:
-    # 01:30 UTC = 07:00 AM IST every Monday
+    # Runs automatically every Monday at 07:00 AM IST (01:30 AM UTC)
     - cron: '30 1 * * 1'
-  workflow_dispatch: # Allows manual trigger from GitHub UI anytime
+  workflow_dispatch:
 
+# Grants permission to commit archive data back to the repo and publish to Pages
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   run-tracker:
@@ -15,50 +22,57 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
       - name: Install Dependencies
-        run: pip install -r requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Run Extraction & Site Generation
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GMAIL_USER: ${{ secrets.GMAIL_USER }}
-          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          RECIPIENT_EMAILS: ${{ secrets.RECIPIENT_EMAILS }}
         run: |
           python -c "
-          import os
-          from datetime import datetime
           from src.scraper import fetch_weekly_feed_entries
-          from src.analyzer import analyze_legal_data
+          from src.analyzer import analyze_legal_news
           from src.generator import build_html_dashboard
-          from src.mailer import send_executive_email
+          import json, os
 
-          week_str = datetime.now().strftime('Week %U, %Y')
           print('Ingesting legal feeds...')
-          raw = fetch_weekly_feed_entries()
-          
+          raw_entries = fetch_weekly_feed_entries()
+
           print('Synthesizing with Gemini...')
-          analyzed = analyze_legal_data(raw)
-          
-          os.makedirs('site', exist_ok=True)
-          html = build_html_dashboard(analyzed, week_str)
-          with open('site/index.html', 'w') as f:
-              f.write(html)
-          
-          portal_url = f'https://{os.environ.get(\"GITHUB_REPOSITORY_OWNER\", \"user\")}.github.io/{os.environ.get(\"GITHUB_REPOSITORY\", \"repo\").split(\"/\")[-1]}/'
-          print('Sending Executive Digest email...')
-          send_executive_email(analyzed, week_str, portal_url)
+          updates = analyze_legal_news(raw_entries)
+
+          print('Saving weekly updates to data/updates.json...')
+          os.makedirs('data', exist_ok=True)
+          with open('data/updates.json', 'w', encoding='utf-8') as f:
+              json.dump(updates, f, indent=2, ensure_ascii=False)
+
+          print('Generating static dashboard and synchronizing archive...')
+          build_html_dashboard(updates)
           "
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # Permanent storage step: saves archive and HTML back into main branch
+      - name: Commit and Push Persistent Archive
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/archive.json data/updates.json index.html
+          git diff --staged --quiet || (git commit -m "chore: persist regulatory archive [skip ci]" && git push)
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./site
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
