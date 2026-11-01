@@ -16,7 +16,6 @@ OUTPUT_HTML = os.path.join(BASE_DIR, "index.html")
 
 CONSULT_URL = "https://juridigm.in/contact"
 
-# Categories triggering the selective advisory CTA banner
 TECH_PRIVACY_DOMAINS = {
     "ai & emerging tech",
     "data privacy & dpdp",
@@ -33,32 +32,35 @@ def load_json(filepath, default=None):
     if os.path.exists(filepath):
         try:
             with open(filepath, "r", encoding="utf-8") as f:
-                return json.load(f)
+                data = json.load(f)
+                return data if isinstance(data, list) else default
         except Exception as e:
-            print(f"[!] Error loading {filepath}: {e}")
+            print(f"[!] Warning reading {filepath}: {e}")
             return default
     return default
 
 
 def save_json(filepath, data):
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f"[!] Warning saving {filepath}: {e}")
 
 
 def compute_week_label(date_str):
     """Derives a normalized 'Week of Mon DD, YYYY' string from a date."""
+    now = datetime.utcnow()
     if not date_str:
-        now = datetime.utcnow()
         monday = now - timedelta(days=now.weekday())
         return f"Week of {monday.strftime('%b %d, %Y')}"
     try:
-        clean_date = str(date_str)[:10]
+        clean_date = str(date_str).strip()[:10]
         dt = datetime.strptime(clean_date, "%Y-%m-%d")
         monday = dt - timedelta(days=dt.weekday())
         return f"Week of {monday.strftime('%b %d, %Y')}"
     except Exception:
-        now = datetime.utcnow()
         monday = now - timedelta(days=now.weekday())
         return f"Week of {monday.strftime('%b %d, %Y')}"
 
@@ -70,42 +72,49 @@ def sync_archive(new_updates):
 
     # Normalize existing archive records
     for item in archive:
-        if "week_label" not in item or not item["week_label"]:
+        if not isinstance(item, dict):
+            continue
+        if not item.get("week_label"):
             item["week_label"] = compute_week_label(item.get("date"))
-        identifier = item.get("id") or item.get("title", "").strip().lower()
+        identifier = str(item.get("id") or item.get("title") or "").strip().lower()
         if identifier:
             seen_identifiers.add(identifier)
 
     added_count = 0
-    for item in new_updates:
-        if "week_label" not in item or not item["week_label"]:
-            item["week_label"] = compute_week_label(item.get("date"))
-        identifier = item.get("id") or item.get("title", "").strip().lower()
-        if identifier and identifier not in seen_identifiers:
-            archive.append(item)
-            seen_identifiers.add(identifier)
-            added_count += 1
+    if isinstance(new_updates, list):
+        for item in new_updates:
+            if not isinstance(item, dict):
+                continue
+            if not item.get("week_label"):
+                item["week_label"] = compute_week_label(item.get("date"))
+            identifier = str(item.get("id") or item.get("title") or "").strip().lower()
+            if identifier and identifier not in seen_identifiers:
+                archive.append(item)
+                seen_identifiers.add(identifier)
+                added_count += 1
 
-    # Sort archive newest first by date
-    archive.sort(key=lambda x: str(x.get("date", "")), reverse=True)
+    archive.sort(key=lambda x: str(x.get("date") or ""), reverse=True)
     save_json(ARCHIVE_FILE, archive)
     print(f"[*] Archive synchronized: {added_count} new updates added (Total: {len(archive)})")
     return archive
 
 
 def render_card(item):
-    """Generates an individual liquid-glass regulatory update card with data attributes for JS filtering."""
-    title = item.get("title", "Untitled Regulatory Update")
-    authority = item.get("authority", "Official Authority")
-    domain = item.get("domain", "Regulatory Compliance")
-    impact = item.get("impact", "Medium").capitalize()
-    date_str = item.get("date", datetime.utcnow().strftime("%Y-%m-%d"))
-    summary = item.get("summary", "No summary provided.")
-    takeaway = item.get("in_house_takeaway") or item.get("takeaway", "")
-    source_url = item.get("source_url") or item.get("link", "#")
-    week_label = item.get("week_label") or compute_week_label(date_str)
+    """Generates an individual liquid-glass regulatory update card with null safety."""
+    if not isinstance(item, dict):
+        return ""
 
-    # Impact badge CSS class
+    title = str(item.get("title") or "Untitled Regulatory Update").strip()
+    authority = str(item.get("authority") or "Official Authority").strip()
+    domain = str(item.get("domain") or "Regulatory Compliance").strip()
+    raw_impact = str(item.get("impact") or "Medium").strip().capitalize()
+    date_str = str(item.get("date") or datetime.utcnow().strftime("%Y-%m-%d")).strip()
+    summary = str(item.get("summary") or "No summary provided.").strip()
+    takeaway = str(item.get("in_house_takeaway") or item.get("takeaway") or "").strip()
+    source_url = str(item.get("source_url") or item.get("link") or "#").strip()
+    week_label = str(item.get("week_label") or compute_week_label(date_str)).strip()
+
+    impact = raw_impact if raw_impact in ["High", "Medium", "Low"] else "Medium"
     impact_class = "impact-medium"
     if impact.lower() == "high":
         impact_class = "impact-high"
@@ -113,8 +122,8 @@ def render_card(item):
         impact_class = "impact-low"
 
     # Contextual CTA Banner for Tech, AI & Privacy items
+    dom_lower = domain.lower()
     selective_cta_html = ""
-    dom_lower = domain.strip().lower()
     if dom_lower in TECH_PRIVACY_DOMAINS or "ai" in dom_lower or "dpdp" in dom_lower:
         selective_cta_html = f"""
         <div class="card-advisory-cta">
@@ -171,14 +180,25 @@ def render_card(item):
     """
 
 
-def build_html_dashboard(all_updates):
-    """Builds the comprehensive HTML interface embedding ALL updates with dynamic client filtering."""
+def build_html_dashboard(updates=None, archive_count=None, *args, **kwargs):
+    """
+    Builds the complete HTML dashboard interface.
+    Accepts 0, 1, or 2 positional arguments to support direct workflow execution.
+    Loads and merges cumulative historical data from archive.json.
+    """
+    # 1. Sync any incoming updates into archive.json
+    incoming_updates = updates if isinstance(updates, list) else []
+    archive = sync_archive(incoming_updates)
+
+    # 2. Use all archive records for the complete searchable interface
+    all_records = archive if archive else incoming_updates
+    valid_updates = [u for u in all_records if isinstance(u, dict)]
     current_date = datetime.utcnow().strftime("%B %d, %Y")
 
-    # Extract Unique Weeks in chronological order (newest first)
+    # 3. Extract Unique Weeks (Chronological, newest first)
     unique_weeks = []
-    for u in all_updates:
-        wl = u.get("week_label")
+    for u in valid_updates:
+        wl = str(u.get("week_label") or "").strip()
         if wl and wl not in unique_weeks:
             unique_weeks.append(wl)
     if not unique_weeks:
@@ -186,24 +206,28 @@ def build_html_dashboard(all_updates):
 
     latest_week = unique_weeks[0]
 
-    # Extract Unique Authorities and Domains for Dropdowns
-    unique_authorities = sorted(list({u.get("authority", "").strip() for u in all_updates if u.get("authority", "").strip()}))
-    unique_domains = sorted(list({u.get("domain", "").strip() for u in all_updates if u.get("domain", "").strip()}))
+    # 4. Extract Unique Authorities and Domains for Filter Dropdowns
+    unique_authorities = sorted(list({str(u.get("authority") or "").strip() for u in valid_updates if str(u.get("authority") or "").strip()}))
+    unique_domains = sorted(list({str(u.get("domain") or "").strip() for u in valid_updates if str(u.get("domain") or "").strip()}))
 
-    # Generate Options HTML
     week_options_html = "\n".join([f'<option value="{w}">{w}</option>' for w in unique_weeks])
     authority_options_html = "\n".join([f'<option value="{a.lower()}">{a}</option>' for a in unique_authorities])
     domain_options_html = "\n".join([f'<option value="{d.lower()}">{d}</option>' for d in unique_domains])
 
-    # Summary Metrics
-    current_week_updates = [u for u in all_updates if u.get("week_label") == latest_week]
-    current_digest_count = len(current_week_updates) if current_week_updates else len(all_updates)
-    high_impact_count = sum(1 for u in all_updates if u.get("impact", "").lower() == "high")
-    tech_count = sum(1 for u in all_updates if u.get("domain", "").strip().lower() in TECH_PRIVACY_DOMAINS or "ai" in u.get("domain", "").lower() or "dpdp" in u.get("domain", "").lower())
-    total_archive_count = len(all_updates)
+    # 5. Metrics Calculations
+    current_week_updates = [u for u in valid_updates if str(u.get("week_label") or "").strip() == latest_week]
+    current_digest_count = len(current_week_updates) if current_week_updates else len(valid_updates)
+    high_impact_count = sum(1 for u in valid_updates if str(u.get("impact") or "").strip().lower() == "high")
+    tech_count = sum(
+        1 for u in valid_updates 
+        if str(u.get("domain") or "").strip().lower() in TECH_PRIVACY_DOMAINS 
+        or "ai" in str(u.get("domain") or "").lower() 
+        or "dpdp" in str(u.get("domain") or "").lower()
+    )
+    total_archive_count = len(valid_updates)
 
-    # Render ALL cards
-    cards_html = "\n".join(render_card(u) for u in all_updates) if all_updates else """
+    # 6. Render All Cards
+    cards_html = "\n".join(filter(None, [render_card(u) for u in valid_updates])) if valid_updates else """
         <div class="no-records">
             <p>No regulatory records available in the tracker.</p>
         </div>
@@ -278,7 +302,6 @@ def build_html_dashboard(all_updates):
             position: relative;
         }
 
-        /* Ambient Animated Mesh Background */
         .bg-ambient-layer {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -304,7 +327,6 @@ def build_html_dashboard(all_updates):
             100% { transform: translate(-40px, 80px) scale(0.95); }
         }
 
-        /* Ambient Watermark */
         .bg-watermark-logo {
             position: fixed;
             top: 50%; left: 50%;
@@ -329,7 +351,6 @@ def build_html_dashboard(all_updates):
             z-index: 1;
         }
 
-        /* Top Brand Navigation Bar */
         .top-navbar {
             display: flex;
             align-items: center;
@@ -412,10 +433,7 @@ def build_html_dashboard(all_updates):
             border-color: #ffffff;
         }
 
-        /* Overview Headline */
-        .portal-header {
-            margin-bottom: 28px;
-        }
+        .portal-header { margin-bottom: 28px; }
         .portal-header .tagline {
             font-size: 0.78rem;
             font-weight: 700;
@@ -440,7 +458,6 @@ def build_html_dashboard(all_updates):
             line-height: 1.5;
         }
 
-        /* Metrics Grid */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -477,12 +494,8 @@ def build_html_dashboard(all_updates):
             color: #ffffff;
             margin-bottom: 4px;
         }
-        .metric-card .sub {
-            font-size: 0.74rem;
-            color: var(--text-muted);
-        }
+        .metric-card .sub { font-size: 0.74rem; color: var(--text-muted); }
 
-        /* Comprehensive Filter & Search Controls Panel */
         .controls-panel {
             background: var(--glass-card);
             border: 1px solid var(--glass-border);
@@ -532,10 +545,7 @@ def build_html_dashboard(all_updates):
             box-shadow: 0 0 16px var(--brand-gold-glow);
         }
 
-        .filter-select option {
-            background: #0f172a;
-            color: #f8fafc;
-        }
+        .filter-select option { background: #0f172a; color: #f8fafc; }
 
         .search-row {
             display: flex;
@@ -543,10 +553,7 @@ def build_html_dashboard(all_updates):
             align-items: center;
             margin-bottom: 14px;
         }
-
-        .search-row .control-group {
-            flex: 1;
-        }
+        .search-row .control-group { flex: 1; }
 
         .status-bar {
             display: flex;
@@ -588,14 +595,12 @@ def build_html_dashboard(all_updates):
             cursor: pointer;
             transition: all 0.2s ease;
         }
-
         .btn-reset:hover {
             background: rgba(217, 119, 6, 0.2);
             border-color: var(--brand-amber);
             color: #ffffff;
         }
 
-        /* Updates Grid */
         .updates-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -651,26 +656,10 @@ def build_html_dashboard(all_updates):
             color: #c4b5fd;
             border: 1px solid rgba(124, 58, 237, 0.4);
         }
-        .impact-high {
-            background: var(--impact-high-bg);
-            color: var(--impact-high-text);
-            border: 1px solid var(--impact-high-border);
-        }
-        .impact-medium {
-            background: var(--impact-med-bg);
-            color: var(--impact-med-text);
-            border: 1px solid var(--impact-med-border);
-        }
-        .impact-low {
-            background: var(--impact-low-bg);
-            color: var(--impact-low-text);
-            border: 1px solid var(--impact-low-border);
-        }
-        .update-date {
-            font-size: 0.74rem;
-            color: var(--text-muted);
-            white-space: nowrap;
-        }
+        .impact-high { background: var(--impact-high-bg); color: var(--impact-high-text); border: 1px solid var(--impact-high-border); }
+        .impact-medium { background: var(--impact-med-bg); color: var(--impact-med-text); border: 1px solid var(--impact-med-border); }
+        .impact-low { background: var(--impact-low-bg); color: var(--impact-low-text); border: 1px solid var(--impact-low-border); }
+        .update-date { font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; }
         .card-title {
             font-size: 1.15rem;
             font-weight: 700;
@@ -701,13 +690,8 @@ def build_html_dashboard(all_updates):
             letter-spacing: 0.06em;
             margin-bottom: 4px;
         }
-        .takeaway-box p {
-            font-size: 0.82rem;
-            color: #f1f5f9;
-            line-height: 1.45;
-        }
+        .takeaway-box p { font-size: 0.82rem; color: #f1f5f9; line-height: 1.45; }
 
-        /* Advisory Banner */
         .card-advisory-cta {
             background: rgba(217, 119, 6, 0.12);
             border: 1px dashed rgba(251, 191, 36, 0.45);
@@ -719,11 +703,7 @@ def build_html_dashboard(all_updates):
             justify-content: space-between;
             gap: 12px;
         }
-        .advisory-text {
-            font-size: 0.78rem;
-            color: #fde68a;
-            line-height: 1.35;
-        }
+        .advisory-text { font-size: 0.78rem; color: #fde68a; line-height: 1.35; }
         .btn-review-cta {
             background: var(--brand-gold);
             color: #030712;
@@ -735,10 +715,7 @@ def build_html_dashboard(all_updates):
             white-space: nowrap;
             transition: all 0.2s ease;
         }
-        .btn-review-cta:hover {
-            background: #fbbf24;
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
-        }
+        .btn-review-cta:hover { background: #fbbf24; box-shadow: 0 0 10px rgba(251, 191, 36, 0.6); }
 
         .card-footer {
             display: flex;
@@ -748,11 +725,7 @@ def build_html_dashboard(all_updates):
             padding-top: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .card-week-tag {
-            font-size: 0.74rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+        .card-week-tag { font-size: 0.74rem; color: var(--text-muted); font-weight: 500; }
         .card-link {
             color: #38bdf8;
             font-size: 0.8rem;
@@ -763,10 +736,7 @@ def build_html_dashboard(all_updates):
             gap: 5px;
             transition: color 0.2s;
         }
-        .card-link:hover {
-            color: #7dd3fc;
-            text-decoration: underline;
-        }
+        .card-link:hover { color: #7dd3fc; text-decoration: underline; }
 
         .no-records {
             grid-column: 1 / -1;
@@ -778,7 +748,6 @@ def build_html_dashboard(all_updates):
             border: 1px solid var(--glass-border);
         }
 
-        /* Footer */
         .portal-footer {
             text-align: center;
             padding-top: 32px;
@@ -787,13 +756,8 @@ def build_html_dashboard(all_updates):
             font-size: 0.82rem;
             line-height: 1.6;
         }
-        .portal-footer a {
-            color: var(--brand-amber);
-            text-decoration: none;
-        }
-        .portal-footer a:hover {
-            text-decoration: underline;
-        }
+        .portal-footer a { color: var(--brand-amber); text-decoration: none; }
+        .portal-footer a:hover { text-decoration: underline; }
 
         @media (max-width: 1024px) {
             .filters-grid { grid-template-columns: repeat(2, 1fr); }
@@ -811,14 +775,12 @@ def build_html_dashboard(all_updates):
 </head>
 
 <body>
-    <!-- Background Ambient Layers -->
     <div class="bg-ambient-layer">
         <div class="orb orb-1"></div>
         <div class="orb orb-2"></div>
         <div class="orb orb-3"></div>
     </div>
 
-    <!-- Ambient Floating Juridigm Balanced Lens Watermark -->
     <div class="bg-watermark-logo">
         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 50 C 28 20, 72 20, 88 50 C 72 80, 28 80, 12 50 Z" stroke="#d97706" stroke-width="4" stroke-linejoin="round" />
@@ -828,7 +790,6 @@ def build_html_dashboard(all_updates):
     </div>
 
     <div class="container">
-        <!-- Top Navigation -->
         <header class="top-navbar">
             <a href="https://juridigm.in" class="brand-cluster">
                 <div class="logo-badge">
@@ -857,14 +818,12 @@ def build_html_dashboard(all_updates):
             </div>
         </header>
 
-        <!-- Main Banner -->
         <section class="portal-header">
             <div class="tagline">Executive Intelligence Digest & Persistent Archive</div>
             <h2>Live Regulatory Trajectory</h2>
             <p>Automated intelligence tracking updates across DPDP regulations, MeitY directives, RBI FinTech circulars, SEBI compliances, and corporate commercial law in India.</p>
         </section>
 
-        <!-- Metrics Overview -->
         <section class="metrics-grid">
             <div class="metric-card">
                 <div class="title">Current Digest</div>
@@ -888,10 +847,8 @@ def build_html_dashboard(all_updates):
             </div>
         </section>
 
-        <!-- Comprehensive Filter & Search Controls Panel -->
         <div class="controls-panel">
             <div class="filters-grid">
-                <!-- 1. Edition / Week Selector -->
                 <div class="control-group">
                     <label class="control-label" for="weekFilter">Timeline / Edition</label>
                     <select id="weekFilter" class="filter-select" onchange="applyFilters()">
@@ -903,7 +860,6 @@ def build_html_dashboard(all_updates):
                     </select>
                 </div>
 
-                <!-- 2. Legal Domain / Topic Selector -->
                 <div class="control-group">
                     <label class="control-label" for="domainFilter">Topic / Legal Domain</label>
                     <select id="domainFilter" class="filter-select" onchange="applyFilters()">
@@ -912,7 +868,6 @@ def build_html_dashboard(all_updates):
                     </select>
                 </div>
 
-                <!-- 3. Authority / Regulator Selector -->
                 <div class="control-group">
                     <label class="control-label" for="authorityFilter">Sector / Regulator</label>
                     <select id="authorityFilter" class="filter-select" onchange="applyFilters()">
@@ -921,7 +876,6 @@ def build_html_dashboard(all_updates):
                     </select>
                 </div>
 
-                <!-- 4. Impact Level Selector -->
                 <div class="control-group">
                     <label class="control-label" for="impactFilter">Impact Urgency</label>
                     <select id="impactFilter" class="filter-select" onchange="applyFilters()">
@@ -933,14 +887,12 @@ def build_html_dashboard(all_updates):
                 </div>
             </div>
 
-            <!-- Keyword Search Row -->
             <div class="search-row">
                 <div class="control-group">
                     <input type="text" id="trackerSearch" class="search-input" placeholder="🔍 Search circular title, takeaway, regulation, or keywords..." onkeyup="applyFilters()">
                 </div>
             </div>
 
-            <!-- Dynamic Status Bar -->
             <div class="status-bar">
                 <div class="active-filter-tags">
                     <span id="resultsCount">Loading updates...</span>
@@ -950,7 +902,6 @@ def build_html_dashboard(all_updates):
             </div>
         </div>
 
-        <!-- Cards Display Area -->
         <main class="updates-grid" id="updatesGrid">
             __CARDS_HTML__
             <div id="emptyFilterNotice" class="no-records" style="display: none;">
@@ -959,14 +910,12 @@ def build_html_dashboard(all_updates):
             </div>
         </main>
 
-        <!-- Footer -->
         <footer class="portal-footer">
             <p>&copy; 2026 <strong>Juridigm Legal Advisory</strong>. All rights reserved.</p>
             <p>Intelligence synthesized for tech enterprises, in-house teams, and startup founders. Need bespoke review? <a href="https://juridigm.in/contact">Schedule a consultation &rarr;</a></p>
         </footer>
     </div>
 
-    <!-- Client-Side Vanilla JS for Real-Time Multi-Dimensional Filtering -->
     <script>
         const LATEST_WEEK = "__LATEST_WEEK__";
 
@@ -991,7 +940,6 @@ def build_html_dashboard(all_updates):
                 const cardImpact = (card.getAttribute('data-impact') || '').trim();
                 const cardText = card.innerText.toLowerCase();
 
-                // 1. Week Matching
                 let matchesWeek = false;
                 if (selectedWeek === 'all') {
                     matchesWeek = true;
@@ -1001,16 +949,9 @@ def build_html_dashboard(all_updates):
                     matchesWeek = (cardWeek === selectedWeek);
                 }
 
-                // 2. Domain Matching
                 let matchesDomain = (selectedDomain === 'all') || cardDomain.includes(selectedDomain);
-
-                // 3. Authority Matching
                 let matchesAuthority = (selectedAuthority === 'all') || cardAuthority.includes(selectedAuthority);
-
-                // 4. Impact Matching
                 let matchesImpact = (selectedImpact === 'all') || (cardImpact === selectedImpact);
-
-                // 5. Search Text Matching
                 let matchesSearch = !searchQuery || cardText.includes(searchQuery);
 
                 if (matchesWeek && matchesDomain && matchesAuthority && matchesImpact && matchesSearch) {
@@ -1021,7 +962,6 @@ def build_html_dashboard(all_updates):
                 }
             });
 
-            // Update Counts and Tag
             const countElem = document.getElementById('resultsCount');
             if (countElem) {
                 countElem.innerText = `Showing ${visibleCount} of ${cards.length} updates`;
@@ -1038,7 +978,6 @@ def build_html_dashboard(all_updates):
                 }
             }
 
-            // Toggle empty state
             const emptyNotice = document.getElementById('emptyFilterNotice');
             if (emptyNotice) {
                 emptyNotice.style.display = (visibleCount === 0) ? 'block' : 'none';
@@ -1058,7 +997,6 @@ def build_html_dashboard(all_updates):
 </html>
 """
 
-    # Populate template tokens safely
     output = html_template.replace("__CURRENT_DIGEST_COUNT__", str(current_digest_count))
     output = output.replace("__HIGH_IMPACT_COUNT__", str(high_impact_count))
     output = output.replace("__TECH_COUNT__", str(tech_count))
@@ -1069,29 +1007,18 @@ def build_html_dashboard(all_updates):
     output = output.replace("__AUTHORITY_OPTIONS__", authority_options_html)
     output = output.replace("__CARDS_HTML__", cards_html)
 
+    # Auto-write to index.html if caller doesn't explicitly handle the return string
+    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
+        f.write(output)
+
     return output
 
 
 def main():
     print("[*] Starting Juridigm Shift Static Site Generator...")
-
-    # Load new updates generated by analyzer
     new_updates = load_json(UPDATES_FILE, default=[])
-
-    # Synchronize updates into permanent archive
-    archive = sync_archive(new_updates)
-
-    # Use entire archive so both past editions and new updates are available
-    all_updates = archive if archive else new_updates
-
-    # Render dashboard
-    html_content = build_html_dashboard(all_updates)
-
-    # Write output to index.html in the repo root
-    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
-        f.write(html_content)
-
-    print(f"[✓] Successfully generated {OUTPUT_HTML} with {len(all_updates)} total updates embedded.")
+    build_html_dashboard(new_updates)
+    print(f"[✓] Successfully generated {OUTPUT_HTML}.")
 
 
 if __name__ == "__main__":
