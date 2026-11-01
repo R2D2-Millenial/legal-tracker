@@ -6,7 +6,6 @@ on:
     - cron: '30 1 * * 1'
   workflow_dispatch:
 
-# Grants permission to commit archive data back to the repo and publish to Pages
 permissions:
   contents: write
   pages: write
@@ -19,6 +18,9 @@ concurrency:
 jobs:
   run-tracker:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -60,7 +62,6 @@ jobs:
           build_html_dashboard(updates)
           "
 
-      # Permanent storage step: saves archive and HTML back into main branch
       - name: Commit and Push Persistent Archive
         run: |
           git config --global user.name "github-actions[bot]"
