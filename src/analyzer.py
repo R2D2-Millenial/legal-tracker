@@ -1,20 +1,21 @@
 """
 Regulatory Intelligence Analyzer
-Synthesizes scraped legal and regulatory feeds using Gemini into actionable in-house intelligence.
-Configured for 30-day historical analysis with resilient model fallback and JSON sanitization.
+Synthesizes scraped legal and regulatory feeds using the Google GenAI SDK.
 """
 
 import json
 import os
 import re
+import time
 from datetime import datetime
-import google.generativeai as genai
+from google import genai
+from google.genai.errors import ServerError, ClientError
 
-# Primary and fallback Gemini models
-MODEL_CASCADE = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-1.5-flash"
+# Verified model cascade sequence
+MODELS_TO_TRY = [
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash"
 ]
 
 
@@ -23,7 +24,6 @@ def clean_json_text(text: str) -> str:
     if not text:
         return "[]"
     text = text.strip()
-    # Strip ```json ... ``` or ``` ... ``` wrappers
     text = re.sub(r"^```(?:json)?\s*", "", text, flags=re.IGNORECASE)
     text = re.sub(r"\s*```\$", "", text)
     return text.strip()
@@ -32,7 +32,6 @@ def clean_json_text(text: str) -> str:
 def analyze_legal_news(raw_entries: list) -> list:
     """
     Synthesizes regulatory updates from the past 30 days into structured intelligence cards.
-    Applies strict in-house relevance filters, prioritizing DPDP, AI tech, and corporate governance.
     """
     if not raw_entries:
         print("[!] No raw feed entries provided to analyzer.")
@@ -43,9 +42,8 @@ def analyze_legal_news(raw_entries: list) -> list:
         print("[!] GEMINI_API_KEY environment variable is missing.")
         return []
 
-    genai.configure(api_key=api_key)
+    client = genai.Client(api_key=api_key)
 
-    # Format feed entries for prompt context
     condensed_entries = []
     for idx, e in enumerate(raw_entries, 1):
         condensed_entries.append(
@@ -57,7 +55,7 @@ def analyze_legal_news(raw_entries: list) -> list:
         )
     feed_context = "\n".join(condensed_entries)
 
-    system_prompt = (
+    prompt = (
         "You are an expert Indian Corporate In-House General Counsel and Regulatory Compliance Director. "
         "Analyze the following legal and regulatory news items from the past 30 days.\n\n"
         "FILTERING CRITERIA:\n"
@@ -81,33 +79,30 @@ def analyze_legal_news(raw_entries: list) -> list:
         "    \"in_house_takeaway\": \"Actionable guidance for legal, compliance, or tech teams (e.g., audit contracts, update consent notices, file statutory form).\",\n"
         "    \"source_url\": \"Direct URL to circular or source article from the provided entry\"\n"
         "  }\n"
-        "]\n"
+        "]\n\n"
+        f"Raw feed entries to analyze:\n\n{feed_context}"
     )
 
-    user_prompt = f"Raw feed entries to analyze:\n\n{feed_context}"
-
-    # Model cascading execution
-    for model_name in MODEL_CASCADE:
+    for model_name in MODELS_TO_TRY:
         try:
-            print(f"[*] Connecting to {model_name}...")
-            model = genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=system_prompt,
-                generation_config={"temperature": 0.2, "response_mime_type": "application/json"}
+            print(f"Connecting to {model_name}...")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config={'response_mime_type': 'application/json'}
             )
-            response = model.generate_content(user_prompt)
-            cleaned_json = clean_json_text(response.text)
-            parsed_data = json.loads(cleaned_json)
-
-            if isinstance(parsed_data, list) and len(parsed_data) > 0:
-                print(f"[✓] Successfully synthesized {len(parsed_data)} regulatory updates using {model_name}.")
-                return parsed_data
-            else:
-                print(f"[!] {model_name} returned empty list or non-array JSON. Trying next model...")
+            cleaned = clean_json_text(response.text)
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, list) and len(parsed) > 0:
+                print(f"[✓] Successfully synthesized {len(parsed)} regulatory updates using {model_name}.")
+                return parsed
+        except (ServerError, ClientError) as e:
+            print(f"{model_name} error: {e}. Switching to backup model...")
+            time.sleep(2)
         except Exception as e:
-            print(f"[!] Error using {model_name}: {e}")
+            print(f"Unexpected error with {model_name}: {e}. Trying next...")
+            time.sleep(2)
 
-    # Fallback response to prevent pipeline failure
     print("[!] All AI models failed. Emitting fallback system notice.")
     return [{
         "id": "notice-active-surveillance",
@@ -121,14 +116,5 @@ def analyze_legal_news(raw_entries: list) -> list:
         "source_url": "[https://juridigm.in](https://juridigm.in)"
     }]
 
-
-if __name__ == "__main__":
-    test_entries = [{
-        "title": "MeitY issues advisory on AI algorithmic safety and model deployment",
-        "summary": "The Ministry of Electronics and Information Technology has issued revised guidance for AI intermediaries regarding user safety.",
-        "link": "[https://pib.gov.in](https://pib.gov.in)",
-        "date": datetime.utcnow().strftime("%Y-%m-%d"),
-        "category_hint": "MeitY & Electronics"
-    }]
-    results = analyze_legal_news(test_entries)
-    print(json.dumps(results, indent=2))
+# Support both function names for compatibility
+analyze_legal_data = analyze_legal_news
