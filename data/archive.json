@@ -1,5 +1,29 @@
 [
   {
+    "id": "imei-tampering-telecom-cyber-security-2026",
+    "title": "MeitY and DoT Issue Strict Compliance Mandates Against IMEI Tampering and Handset Cloning",
+    "authority": "MeitY",
+    "domain": "Telecom & Cyber",
+    "impact": "High",
+    "date": "2026-11-02",
+    "summary": "The Ministry of Electronics and Information Technology (MeitY) and the Department of Telecommunications have reinforced compliance mandates prohibiting unauthorized modification or cloning of International Mobile Equipment Identity (IMEI) numbers. The regulatory framework outlines strict liability and operational obligations for device manufacturers, telecom providers, and enterprise mobility management services to prevent device spoofing and cyber-enabled financial fraud.",
+    "in_house_takeaway": "Telecom operators, device OEMs, and corporate IT governance teams must audit hardware enrollment systems, ensure firmware protection against IMEI modification, and align internal device procurement policies with cybersecurity reporting standards.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151040",
+    "week_label": "Week of Nov 02, 2026"
+  },
+  {
+    "id": "electronics-components-manufacturing-scheme-meity",
+    "title": "MeitY Outlines Compliance and Value-Addition Guidelines Under Electronics Components Manufacturing Scheme",
+    "authority": "MeitY",
+    "domain": "AI & Emerging Tech",
+    "impact": "Medium",
+    "date": "2026-11-02",
+    "summary": "MeitY has promulgated detailed operational and regulatory guidelines under the Electronics Components Manufacturing Scheme to incentivize domestic hardware manufacturing. Participating hardware and tech entities must satisfy designated local value-addition thresholds, statutory compliance audits, and periodic monitoring disclosures to retain fiscal incentives.",
+    "in_house_takeaway": "In-house counsel at hardware and tech manufacturing firms should audit supply chain contracts to ensure local content compliance, review statutory incentive eligibility criteria, and update quarterly regulatory filing procedures.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151017",
+    "week_label": "Week of Nov 02, 2026"
+  },
+  {
     "id": "notice-active-surveillance",
     "title": "Automated Legal Surveillance Pipeline Active",
     "authority": "Juridigm Regulatory Watch",
