@@ -1,5 +1,41 @@
 [
   {
+    "id": "bankers-books-evidence-rules-2026",
+    "title": "Updated Framework for Digital Financial Evidence under Bankers' Books Evidence Provisions 2026",
+    "authority": "Ministry of Finance",
+    "domain": "FinTech & Banking",
+    "impact": "High",
+    "date": "2026-11-16",
+    "summary": "The Ministry of Finance has published updated operational rules under the Bankers' Books Evidence framework to standardize digital transactional logs, electronic statements, and system-generated audit trails. The revised rules establish strict technical and procedural standards for certifying electronic financial records before courts and statutory tribunals. This measure ensures legal validity and expedited processing of digital evidence in banking litigation and regulatory investigations.",
+    "in_house_takeaway": "In-house counsel and compliance officers at banks, NBFCs, and FinTech platforms must update data archiving workflows and audit trail certification templates to align with the revised electronic evidence standards.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151060",
+    "week_label": "Week of Nov 16, 2026"
+  },
+  {
+    "id": "telecom-imei-tampering-cybersecurity-norms",
+    "title": "Strict Regulatory Enforcement Protocols Against IMEI Tampering and Mobile Cyber Fraud",
+    "authority": "Department of Telecommunications",
+    "domain": "Telecom & Cyber",
+    "impact": "Medium",
+    "date": "2026-11-16",
+    "summary": "The Department of Telecommunications has issued revised enforcement directives prohibiting the unauthorized modification, cloning, or spoofing of International Mobile Equipment Identity (IMEI) numbers. The guidelines mandate enhanced device registration protocols for hardware importers, enterprise device managers, and telecommunication network operators. Non-compliance exposes entities to penal liability under cyber security regulations and telecom governance laws.",
+    "in_house_takeaway": "Enterprise IT security and legal procurement teams should review device management policies, audit corporate hardware supply chains, and ensure device management tools comply with statutory anti-tampering standards.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151040",
+    "week_label": "Week of Nov 16, 2026"
+  },
+  {
+    "id": "indian-aircraft-rules-2026-notification",
+    "title": "Notification of Modernized Indian Aircraft Rules 2026 for Commercial and Drone Operations",
+    "authority": "Ministry of Civil Aviation",
+    "domain": "Contracts & Commercial",
+    "impact": "Medium",
+    "date": "2026-11-16",
+    "summary": "The Ministry of Civil Aviation has introduced the modernized Indian Aircraft Rules 2026, overhauling compliance processes for commercial airspace users, cargo operations, and autonomous flight operations. The framework simplifies regulatory filings, streamlines operator certifications, and updates safety protocols for enterprise aviation logistics. The rules aim to enhance ease of doing business across civil aviation and aerial supply chain operations.",
+    "in_house_takeaway": "Legal counsel representing logistics, drone operations, and aviation services companies should audit operating permits, service level agreements, and compliance management systems against the 2026 revised framework.",
+    "source_url": "https://pib.gov.in/FactsheetDetails.aspx?Id=151164",
+    "week_label": "Week of Nov 16, 2026"
+  },
+  {
     "id": "labor-codes-capacity-building-dewas-2026",
     "title": "Ministry of Labour Conducts Capacity-Building Session on Unified Labour Codes Implementation",
     "authority": "Ministry of Labour and Employment",
